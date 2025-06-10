@@ -51,7 +51,9 @@ def test_pbls_search():
 
     # Define a grid of trial periods and durations for pbls_search.
     # Here we search for periods in a range that covers the true transit period.
-    periods = np.linspace(3, 4, 100)         # Trial periods in days
+
+    # wh3: 10k periods -> 106 sec.  3k periods -> 46 sec.
+    periods = np.linspace(2, 10, 10000)         # Trial periods in days
     durations = np.linspace(0.005, 0.02, 10)    # Trial durations (as a fraction of period)
 
     # Run pbls_search on the synthetic data.
