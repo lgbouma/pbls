@@ -14,12 +14,10 @@ def _worker(args):
     return (trial_period, power0, bp['snr'], bp['duration'], bp['epoch'], bp['depth'], bm)
 
 
-def fast_pbls_search(time, flux, periods, durations, epoch_steps=50, poly_order=2):
+def fast_pbls_search(time, flux, periods, durations, epoch_steps=50, poly_order=2, nworkers = mp.cpu_count()):
     """
     Parallel accelerated variant of pbls_search using multiprocessing over periods.
     """
-    # Number of worker processes and task limits
-    nworkers = mp.cpu_count()
     maxworkertasks = 1000
     pool = mp.Pool(nworkers, maxtasksperchild=maxworkertasks)
     # Prepare tasks for each trial period
