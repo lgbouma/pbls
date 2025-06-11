@@ -1,4 +1,5 @@
 import numpy as np
+import numba
 
 def split_segments(idx):
     """
@@ -13,6 +14,34 @@ def split_segments(idx):
     ends   = np.concatenate((gaps, [idx.size - 1]))
     return [idx[s:e+1] for s, e in zip(starts, ends)]
 
+
+@numba.njit
+def detrend_segment(t_loc, f_loc, out_idx, poly_order):
+    N = t_loc.shape[0]
+    M = poly_order + 1
+    Nout = out_idx.shape[0]
+    # build Vandermonde matrix on out-of-transit points
+    Vout = np.empty((Nout, M))
+    for i in range(Nout):
+        x = t_loc[out_idx[i]]
+        for j in range(M):
+            Vout[i, j] = x ** (poly_order - j)
+    # normal equations: (VᵀV) c = Vᵀ f
+    ATA = Vout.T @ Vout
+    # → add small diagonal ridge to avoid singular matrix
+    eps = 1e-8
+    for j in range(M):
+        ATA[j, j] += eps
+    ATb = Vout.T @ f_loc[out_idx]
+    coeffs = np.linalg.solve(ATA, ATb)
+    # evaluate polynomial on all points
+    mval = np.empty(N)
+    for i in range(N):
+        acc = 0.0
+        for j in range(M):
+            acc += coeffs[j] * (t_loc[i] ** (poly_order - j))
+        mval[i] = acc
+    return mval, f_loc - mval
 
 def pbls_search(time, flux, periods, durations, epoch_steps=50, poly_order=2):
     """
@@ -107,8 +136,9 @@ def pbls_search(time, flux, periods, durations, epoch_steps=50, poly_order=2):
 
             for epoch in epochs:
 
-                # #2-#4: Create a mask of all in transit points
-
+                # #2-#4: create a mask of all in transit points, which when
+                # iterated over, yields each transit.
+                
                 # 2) compute relative phase to nearest transit center
                 center_phase = epoch + half_pd
                 rel_phase    = phase - center_phase
@@ -146,11 +176,8 @@ def pbls_search(time, flux, periods, durations, epoch_steps=50, poly_order=2):
                     f_loc = flux[local_idx]
                     out_local = np.setdiff1d(np.arange(len(local_idx)), in_local)
 
-                    # fit poly to out-of-transit
-                    p    = np.polyfit(t_loc[out_local], f_loc[out_local], poly_order)
-                    poly = np.poly1d(p)
-                    mval = poly(t_loc)
-                    fcor = f_loc - mval
+                    # fit poly to out-of-transit → detrend via numba helper
+                    mval, fcor = detrend_segment(t_loc, f_loc, out_local, poly_order)
 
                     local_times.append(t_loc)
                     local_fluxes.append(f_loc)
