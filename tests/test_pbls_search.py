@@ -1,5 +1,5 @@
 import os
-import numpy as np
+import numpy as np, pandas as pd
 import matplotlib.pyplot as plt
 import time as timemodule
 
@@ -37,7 +37,7 @@ def test_pbls_search():
 
     # Define rotation parameters
     rotation_dict = {
-        'prot': 3.5,         # stellar rotation period in days
+        'prot': 2.5,         # stellar rotation period in days
         'a1': 0.04,          # amplitude of primary sinusoid
         'a2': 0.01,         # amplitude of secondary sinusoid
         'phi1': 0.0,         # phase offset for primary sinusoid
@@ -108,9 +108,26 @@ def test_pbls_search():
     Porb = transit_dict['period']
     Prot = rotation_dict['prot']
 
-    plot_path = os.path.join(TESTRESULTSDIR, f"test_pbls_search_result_Porb{Porb:.3f}_Prot{Prot:.3f}.png")
+    plot_path = os.path.join(TESTRESULTSDIR, 'png', f"test_pbls_search_result_Porb{Porb:.3f}_Prot{Prot:.3f}.png")
     plt.savefig(plot_path, dpi=300, bbox_inches="tight")
     plt.close()
+
+    csv_path = os.path.join(TESTRESULTSDIR, 'csv', f"pbls_search_periodogram_Porb{Porb:.3f}_Prot{Prot:.3f}.csv")
+    df = pd.DataFrame({
+        'period':trial_periods,
+        'power':power_spectrum,
+    })
+    df.to_csv(csv_path, index=False)
+    print(f'Wrote {csv_path}')
+
+    csv_path = os.path.join(TESTRESULTSDIR, 'csv', f"pbls_search_lightcurve_Porb{Porb:.3f}_Prot{Prot:.3f}.csv")
+    df = pd.DataFrame({
+        'time':time,
+        'flux':flux,
+    })
+    df.to_csv(csv_path, index=False)
+    print(f'Wrote {csv_path}')
+
 
 if __name__ == "__main__":
     # Run the test function
