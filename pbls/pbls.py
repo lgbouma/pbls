@@ -43,7 +43,7 @@ def detrend_segment(t_loc, f_loc, out_idx, poly_order):
         mval[i] = acc
     return mval, f_loc - mval
 
-def pbls_search(time, flux, periods, durations, epoch_steps=50, poly_order=2):
+def pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2):
     """
     A Box Least Squares (BLS) variant that fits and subtracts a local polynomial trend
     in the time domain around each transit event to mitigate stellar spot-induced variability.
@@ -72,12 +72,11 @@ def pbls_search(time, flux, periods, durations, epoch_steps=50, poly_order=2):
         1D array of flux values corresponding to `time`.
     periods : np.ndarray
         Array of trial orbital periods.
-    durations : np.ndarray
-        Array of trial durations (as a fraction of the period).
-        For example, if durations = [0.01, 0.02], these imply 1% and 2% of the period.
+    durations_hr : np.ndarray
+        Array of trial durations in units of hours.
     epoch_steps : int, optional
-        Number of trial start phases for each (period, duration) combination.
-        The phases range from 0 to (1 - duration).
+        Number of trial start phases for each (period, duration_hr) combination.
+        The phases range from 0 to (1 - frac_duration).
     poly_order : int, optional
         Order of the local polynomial to be fit in time (e.g., 2 for quadratic).
     
@@ -85,7 +84,7 @@ def pbls_search(time, flux, periods, durations, epoch_steps=50, poly_order=2):
     -------
     dict
         A dictionary with the following keys:
-          'best_params': dict with best period, duration, epoch, depth, and snr.
+          'best_params': dict with best period, duration_hr, epoch, depth, and snr.
           'power': numpy array of maximum SNR for each trial period.
           'periods': the trial periods array.
           'best_model': dict with concatenated arrays for:
@@ -98,7 +97,7 @@ def pbls_search(time, flux, periods, durations, epoch_steps=50, poly_order=2):
     """
     best_snr = -np.inf
     best_period = None
-    best_duration = None
+    best_duration_hr = None
     best_epoch = None
     best_depth = None
     
@@ -125,6 +124,8 @@ def pbls_search(time, flux, periods, durations, epoch_steps=50, poly_order=2):
 
         period_max_snr = -np.inf
         phase = ((time - tmin) % trial_period) / trial_period # pre-fold once per period
+
+        durations = (durations_hr / 24.) / trial_period
         
         # Loop over trial durations
         for trial_duration in durations:
@@ -211,7 +212,7 @@ def pbls_search(time, flux, periods, durations, epoch_steps=50, poly_order=2):
                 if snr > best_snr:
                     best_snr = snr
                     best_period = trial_period
-                    best_duration = trial_duration
+                    best_duration_hr = trial_duration * trial_period * 24.0  # convert to hours
                     best_epoch = epoch
                     best_depth = depth
                     
@@ -228,7 +229,7 @@ def pbls_search(time, flux, periods, durations, epoch_steps=50, poly_order=2):
     result = {
         'best_params': {
             'period': best_period,
-            'duration': best_duration,
+            'duration_hr': best_duration_hr,
             'epoch': best_epoch,
             'depth': best_depth,
             'snr': best_snr

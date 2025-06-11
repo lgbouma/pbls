@@ -80,7 +80,7 @@ def plot_phase_folded_best(ax, best_model, best_params):
     ax.set_ylabel("Detrended Flux")
     ax.set_title("Phase-Folded Recovered Signal")
     # Highlight the transit region using best_params (epoch and duration are in phase units)
-    ax.axvspan(best_params['epoch'], best_params['epoch'] + best_params['duration'], color='red', alpha=0.3)
+    ax.axvspan(best_params['epoch'], best_params['epoch'] + (best_params['duration_hr']/24)/period, color='red', alpha=0.3)
 
 def plot_summary_text(ax, best_params):
     """
@@ -88,21 +88,21 @@ def plot_summary_text(ax, best_params):
     """
     period = best_params['period']
     epoch = best_params['epoch']
-    duration = best_params['duration']
+    duration_hr = best_params['duration_hr']
     depth = best_params['depth']
     snr = best_params['snr']
     
     # Convert phase to days for epoch and transit duration.
     epoch_days = epoch * period
-    duration_days = duration * period
-    duration_hours = duration_days * 24
+    duration_days = duration_hr * 24
+    duration = duration_days / period
     depth_ppt = depth * 1000
     
     summary = (
         f"Best pbls_search Results:\n"
         f"Period: {period:.3f} days\n"
         f"Epoch: {epoch_days:.3f} days\n"
-        f"Duration: {duration_hours:.1f} hours\n"
+        f"Duration: {duration_hr:.1f} hours\n"
         f"Depth: {depth_ppt:.1f} ppt\n"
         f"SNR: {snr:.1f}"
     )

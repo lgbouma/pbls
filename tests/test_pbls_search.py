@@ -25,19 +25,19 @@ def test_pbls_search():
     time = np.arange(0, total_time, cadence)
 
     # Define noise level
-    noise_level = 1e-10 # 0.0002
+    noise_level = 2e-4
 
     # Define transit parameters
     transit_dict = {
         'period': 3.1666,      # days
         't0': 2.5,             # central transit time
-        'depth': 0.0005,        # fractional flux drop
-        'duration': 0.1        # fractional duration
+        'depth': 0.001,        # fractional flux drop
+        'duration_hr': 3.        # fractional duration
     }
 
     # Define rotation parameters
     rotation_dict = {
-        'prot': 3.8,         # stellar rotation period in days
+        'prot': 3.5,         # stellar rotation period in days
         'a1': 0.04,          # amplitude of primary sinusoid
         'a2': 0.01,         # amplitude of secondary sinusoid
         'phi1': 0.0,         # phase offset for primary sinusoid
@@ -53,13 +53,13 @@ def test_pbls_search():
     # Here we search for periods in a range that covers the true transit period.
 
     # wh3 (non-optimized at 5eec251): 10k periods -> 106 sec.  3k periods -> 46 sec.
-    periods = np.linspace(2, 10, 10000)         # Trial periods in days
-    durations = np.linspace(0.005, 0.02, 10)    # Trial durations (as a fraction of period)
+    periods = np.linspace(2, 10, 3000)         # Trial periods in days
+    durations_hr = np.array([1,2,3,4]) # trial durations in units of hours
 
     # Run pbls_search on the synthetic data.
     start_time = timemodule.time()
-    result = fast_pbls_search(time, flux, periods, durations, epoch_steps=50, poly_order=3)
-    #result = pbls_search(time, flux, periods, durations, epoch_steps=50, poly_order=3)
+    result = fast_pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=3)
+    #result = pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=3)
     elapsed_time = timemodule.time() - start_time
     print(f"fast_pbls_search took {elapsed_time:.3f} seconds")
 
@@ -73,8 +73,8 @@ def test_pbls_search():
     N = len(time)       # total number of points
     gamma = N / total_time # sampling rate
     true_depth = transit_dict['depth']
-    true_duration = transit_dict['duration']
     true_period = transit_dict['period']
+    true_duration = (transit_dict['duration_hr'] / 24) / true_period
     snr_per_transit = (true_depth / noise_level) * ( gamma * true_duration * true_period )**(1/2)
     N_transits = total_time / true_period
     predicted_snr = snr_per_transit * N_transits**(1/2)
@@ -90,7 +90,7 @@ def test_pbls_search():
 
     # Print out the best parameters found.
     print("Best period found: {:.4f} days".format(best_params['period']))
-    print("Best duration (fraction): {:.4f}".format(best_params['duration']))
+    print("Best duration (hours): {:.4f}".format(best_params['duration_hr']))
     print("Best epoch (phase): {:.4f}".format(best_params['epoch']))
     print("Best transit depth: {:.6f}".format(best_params['depth']))
     print("Best SNR: {:.2f}".format(best_params['snr']))
@@ -105,7 +105,10 @@ def test_pbls_search():
     #   DDEEFF
     fig = plot_summary_figure(time, flux, trial_periods, power_spectrum, best_params, best_model)
 
-    plot_path = os.path.join(TESTRESULTSDIR, "test_str_search_result.png")
+    Porb = transit_dict['period']
+    Prot = rotation_dict['prot']
+
+    plot_path = os.path.join(TESTRESULTSDIR, f"test_pbls_search_result_Porb{Porb:.3f}_Prot{Prot:.3f}.png")
     plt.savefig(plot_path, dpi=300, bbox_inches="tight")
     plt.close()
 

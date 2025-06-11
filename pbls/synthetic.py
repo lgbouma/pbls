@@ -97,10 +97,11 @@ def generate_transit_rotation_light_curve(
     #   if (time is in-transit) => flux dips by 'depth'
     # More sophisticated transit shapes could be used.
 
-    period   = transit_dict.get('period', 10.0)     # planet's orbital period
-    t0       = transit_dict.get('t0', 0.0)          # time of central transit
-    depth    = transit_dict.get('depth', 0.01)      # fraction of flux reduced (e.g., 0.01 = 1%)
-    duration = transit_dict.get('duration', 0.3)    # duration of transit
+    period      = transit_dict.get('period', 10.0)     # planet's orbital period
+    t0          = transit_dict.get('t0', 0.0)          # time of central transit
+    depth       = transit_dict.get('depth', 0.01)      # fraction of flux reduced (e.g., 0.01 = 1%)
+    duration_hr = transit_dict.get('duration_hr', 3)   # duration of transit
+    duration    = (duration_hr / 24.0) / period        # fractional duration
 
     # For a single transit, define the start and end times:
     # We can replicate across many orbital phases if needed (multiple transits).
