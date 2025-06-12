@@ -63,7 +63,7 @@ def fit_and_subtract_peaks(x: np.ndarray, y: np.ndarray) -> dict:
             break
 
         width = find_contiguous_width(x, y, peak_idx, baseline)
-        window_half = 0.34 * width
+        window_half = 0.48 * width
         mask = np.abs(x - x[peak_idx]) <= window_half
 
         # initial guesses: offset, amp, mu, sigma
@@ -86,7 +86,7 @@ def fit_and_subtract_peaks(x: np.ndarray, y: np.ndarray) -> dict:
         # subtract Gaussian model where y > baseline
         model_vals = gaussian_with_offset(x[mask], *popt)
         subtract_mask = mask & (y > baseline)
-        model = gaussian_with_offset(x[subtract_mask], *popt)
+        model = gaussian_with_offset(x[subtract_mask], *popt) - offset
         y[subtract_mask] -= model
 
         # cache residual and all parameters
