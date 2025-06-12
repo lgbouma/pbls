@@ -134,7 +134,7 @@ def test_pbls_search():
         df.to_csv(csv_path, index=False)
         print(f'Wrote {csv_path}')
 
-        test_periodogram_processing(Porb=Porb, Prot=Prot)
+        test_periodogram_processing(Porb=Porb, Prot=Prot, method='trimmean')
         print(42*'-')
 
 

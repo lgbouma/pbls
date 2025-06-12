@@ -5,11 +5,13 @@ import matplotlib.animation as animation
 import time as timemodule
 
 from pbls.paths import TESTRESULTSDIR
-from pbls.periodogram_processing import fit_and_subtract_peaks
+from pbls.periodogram_processing import (
+    iterative_gaussian_whitening, trimmean_whitening
+)
 from pbls.pbls import pbls_search
 from pbls.visualization import plot_summary_figure
 
-def test_periodogram_processing(Porb=3.1666, Prot=1.4):
+def test_periodogram_processing(Porb=3.1666, Prot=1.4, method='itergaussian'):
 
     csv_path = os.path.join(TESTRESULTSDIR, 'csv', f"pbls_search_periodogram_Porb{Porb:.3f}_Prot{Prot:.3f}.csv")
     lc_path = os.path.join(TESTRESULTSDIR, 'csv', f"pbls_search_lightcurve_Porb{Porb:.3f}_Prot{Prot:.3f}.csv")
@@ -20,7 +22,12 @@ def test_periodogram_processing(Porb=3.1666, Prot=1.4):
     df = pd.read_csv(lc_path)
     time, flux = df['time'].values, df['flux'].values
 
-    pg_results = fit_and_subtract_peaks(x, y)
+    if method == 'itergaussian':
+        pg_results = iterative_gaussian_whitening(x, y)
+    elif method == 'trimmean':
+        pg_results = trimmean_whitening(x, y)
+    else:
+        raise ValueError(f"Unknown method: {method}. Use 'itergaussian' or 'trimmean'.")
 
     # read the whitened periodogram results; recalculate best-fit model params
     max_key = max(np.array(list(pg_results.keys())))
@@ -38,18 +45,27 @@ def test_periodogram_processing(Porb=3.1666, Prot=1.4):
     # Plot summary figure (based on the peak found after gaussian peak whitening)
     fig = plot_summary_figure(time, flux, x_start, y_start, bp, bm)
 
-    plot_path = os.path.join(TESTRESULTSDIR, 'png', f"test_pbls_search_result_pgprocessed_Porb{Porb:.3f}_Prot{Prot:.3f}.png")
+    plot_path = os.path.join(TESTRESULTSDIR, 'png', f"test_pbls_search_result_pgproc{method}_Porb{Porb:.3f}_Prot{Prot:.3f}.png")
     plt.savefig(plot_path, dpi=300, bbox_inches="tight")
     plt.close()
 
     # Animated periodogram fitting/subtraction
     fig_anim, ax_anim = plt.subplots(figsize=(10, 6))
+
     def animate(i):
+
         ax_anim.clear()
         data = pg_results[i]
         mask = data['subtract_mask']
         ax_anim.plot(data['x'], data['y_start'], c='k', lw=0.5, zorder=1)
-        ax_anim.plot(data['x'][mask], data['model'] + data['offset'], c='C1', lw=2, zorder=-1, alpha=0.5)
+        
+        if method == 'itergaussian':
+            ax_anim.plot(data['x'][mask], data['model'] + data['offset'],
+            c='C1', lw=2, zorder=-1, alpha=0.5)
+        elif method == 'trimmean':
+            ax_anim.plot(data['x'], data['model'],
+            c='C1', lw=2, zorder=-1, alpha=0.5)
+            
         ax_anim.set_title(f"Iteration {i} - Peak Period: {data['peak_period']:.3f} days")
         ax_anim.set_xlabel("Period (days)")
         ax_anim.set_ylabel("Power")
@@ -59,7 +75,7 @@ def test_periodogram_processing(Porb=3.1666, Prot=1.4):
                                 interval=800, blit=False, repeat=False)
 
     anim_path = os.path.join(TESTRESULTSDIR, 'mp4',
-        f"periodogram_animation_Porb{Porb:.3f}_Prot{Prot:.3f}.mp4")
+        f"periodogram_animation_{method}_Porb{Porb:.3f}_Prot{Prot:.3f}.mp4")
     ani.save(anim_path, writer='ffmpeg', dpi=300)
     plt.close(fig_anim)
 
