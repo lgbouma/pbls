@@ -14,7 +14,7 @@ def plot_periodogram(ax, periods, power):
     """
     Plot the periodogram on the provided Axes.
     """
-    ax.plot(periods, power, 'b-')
+    ax.plot(periods, power, c='k', lw=0.5)
     ax.set_xlabel("Trial Period (days)")
     ax.set_ylabel("Detection Statistic")
     ax.set_title("pbls_search Periodogram")
