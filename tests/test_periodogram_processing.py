@@ -10,8 +10,9 @@ from pbls.periodogram_processing import (
 )
 from pbls.pbls import pbls_search
 from pbls.visualization import plot_summary_figure
+from astropy.timeseries import LombScargle
 
-def test_periodogram_processing(Porb=3.1666, Prot=1.4, method='itergaussian'):
+def test_periodogram_processing(Porb=3.1666, Prot=1.4, method='trimmean'):
 
     csv_path = os.path.join(TESTRESULTSDIR, 'csv', f"pbls_search_periodogram_Porb{Porb:.3f}_Prot{Prot:.3f}.csv")
     lc_path = os.path.join(TESTRESULTSDIR, 'csv', f"pbls_search_lightcurve_Porb{Porb:.3f}_Prot{Prot:.3f}.csv")
@@ -22,10 +23,22 @@ def test_periodogram_processing(Porb=3.1666, Prot=1.4, method='itergaussian'):
     df = pd.read_csv(lc_path)
     time, flux = df['time'].values, df['flux'].values
 
+    # measure rotation period from the light curve
+    ls = LombScargle(time, flux)
+    Prot_min, Prot_max = 0.1, 15.
+    minimum_frequency = 1.0 / Prot_max
+    maximum_frequency = 1.0 / Prot_min
+    N_freq = 1_000_000
+    frequency = np.linspace(minimum_frequency, maximum_frequency, N_freq)
+    power_ls = ls.power(frequency)
+    best_freq = frequency[np.argmax(power_ls)]
+    Prot = 1.0 / best_freq
+    print(f"Measured LS period: {Prot:.4f} days")
+
     if method == 'itergaussian':
         pg_results = iterative_gaussian_whitening(x, y)
     elif method == 'trimmean':
-        pg_results = trimmean_whitening(x, y)
+        pg_results = trimmean_whitening(x, y, Prot=Prot)
     else:
         raise ValueError(f"Unknown method: {method}. Use 'itergaussian' or 'trimmean'.")
 
@@ -80,5 +93,5 @@ def test_periodogram_processing(Porb=3.1666, Prot=1.4, method='itergaussian'):
     plt.close(fig_anim)
 
 if __name__ == "__main__":
-    test_periodogram_processing(Porb=3.1666, Prot=3.3)
+    test_periodogram_processing(Porb=3.1666, Prot=1.4)
     print("Test completed successfully.")

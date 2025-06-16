@@ -37,7 +37,7 @@ def test_pbls_search():
         'duration_hr': 3.        # fractional duration
     }
 
-    Prots = [3.5, 3.3, 2.5, 1.4]
+    Prots = [3.5, 3.3, 2.5, 1.4, 0.85, 0.7]
 
     for Prot in Prots:
 
