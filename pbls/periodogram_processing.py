@@ -10,6 +10,7 @@ Bonus:
 import numpy as np
 from scipy.optimize import curve_fit
 from .pbls import pbls_search
+from .sliders import variablewindow_flatten
 
 def gaussian_with_offset(x: np.ndarray, offset: float, amp: float,
                          mu: float, sigma: float) -> np.ndarray:
@@ -134,12 +135,14 @@ def iterative_gaussian_whitening(x: np.ndarray, y: np.ndarray) -> dict:
     return results
 
     
-def trimmean_whitening(x: np.ndarray, y: np.ndarray, trim_fraction: float = 0.1) -> dict:
+def trimmean_whitening(x: np.ndarray, y: np.ndarray, trim_fraction: float = 0.1,
+                       Prot = None) -> dict:
     """
     Args:
         x: Period axis array.
         y: Power axis array (modified in place).
         trim_fraction: Fraction of data to trim from each end of the y array
+        Prot: rotation period (days, float)
     
     Returns:
         A dict mapping iteration index to a dict with keys:
@@ -148,11 +151,50 @@ def trimmean_whitening(x: np.ndarray, y: np.ndarray, trim_fraction: float = 0.1)
 
     from wotan import flatten
 
-    flat_p, trend_p = flatten(
-        x, y, method='trim_mean', window_length=0.05, edge_cutoff=0.,
-        break_tolerance=0.5, return_trend=True, proportiontocut=trim_fraction
-    )
+    # points per day; assumes linear period spacing (which from an information
+    # theory point of view is ill-advised)
+    n = len(x) / (x.max() - x.min())
+    window_length = 0.05 # in units of days
+    N = n * window_length
+    assert float(N) > 10, "Periodogram grid too coarse / Window length too small for trimmean"
 
+    if Prot is None or Prot > 2.0:
+        flat_p, trend_p = flatten(
+            x, y, method='trim_mean', window_length=0.05, edge_cutoff=0.,
+            break_tolerance=0.5, return_trend=True, proportiontocut=trim_fraction
+        )
+
+    else:
+        # When Prot < 2 days, there is a forest of peaks in the periodogram that
+        # can be whitened by using adaptive window lengths.
+        harmonics = np.array([N * Prot for N in range(100)])
+        half_harmonics = harmonics + 0.5 * Prot
+        merged_harmonics = np.unique(np.concatenate((np.array([0.5*Prot]), harmonics, half_harmonics)))
+        sel = (np.nanmin(x) < merged_harmonics) & (merged_harmonics < np.nanmax(x))
+        merged_harmonics = merged_harmonics[sel]
+
+        # heuristic to set window widths based on Prot and harmonic number
+        # widths get wider for longer trial periods
+        prefactor = 1/50 # larger -> wider windows
+        window_widths = merged_harmonics * Prot**0.5 * prefactor
+
+        masks = []
+        for harmonic, width in zip(merged_harmonics, window_widths):
+            in_harmonic_mask = np.abs(x - harmonic) < width / 2
+            masks.append(in_harmonic_mask)
+
+        combined_mask = np.any(np.array(masks), axis=0)
+
+        # in the masked regions, use a 5x smaller window length (-> 0.01 days by default)
+        window_lengths = np.ones(len(x)) * window_length # default window length
+        window_lengths[combined_mask] = np.ones(len(x[combined_mask])) * window_length / 5
+
+        flat_p, trend_p = variablewindow_flatten(
+            x, y, method='trim_mean', window_length=window_lengths,
+            edge_cutoff=0., break_tolerance=0.5,
+            return_trend=True, proportiontocut=trim_fraction
+        )
+        
     residual = y - trend_p
     
     results = {}
