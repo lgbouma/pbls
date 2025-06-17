@@ -38,6 +38,7 @@ def test_pbls_search():
     }
 
     Prots = [3.5, 3.3, 2.5, 1.4, 0.85, 0.7]
+    poly_order = 3
 
     for Prot in Prots:
 
@@ -64,7 +65,7 @@ def test_pbls_search():
 
         # Run pbls_search on the synthetic data.
         start_time = timemodule.time()
-        result = fast_pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=3)
+        result = fast_pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=poly_order)
         #result = pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=3)
         elapsed_time = timemodule.time() - start_time
         print(f"fast_pbls_search took {elapsed_time:.3f} seconds")
@@ -114,11 +115,17 @@ def test_pbls_search():
         Porb = transit_dict['period']
         Prot = rotation_dict['prot']
 
-        plot_path = os.path.join(TESTRESULTSDIR, 'png', f"test_pbls_search_result_Porb{Porb:.3f}_Prot{Prot:.3f}.png")
+        plot_path = os.path.join(
+            TESTRESULTSDIR, 'png',
+            f"test_pbls_search_result_Porb{Porb:.3f}_Prot{Prot:.3f}_po{poly_order:d}.png"
+        )
         plt.savefig(plot_path, dpi=300, bbox_inches="tight")
         plt.close()
 
-        csv_path = os.path.join(TESTRESULTSDIR, 'csv', f"pbls_search_periodogram_Porb{Porb:.3f}_Prot{Prot:.3f}.csv")
+        csv_path = os.path.join(
+            TESTRESULTSDIR, 'csv',
+            f"pbls_search_periodogram_Porb{Porb:.3f}_Prot{Prot:.3f}_po{poly_order:d}.csv"
+        )
         df = pd.DataFrame({
             'period':trial_periods,
             'power':power_spectrum,
@@ -126,7 +133,10 @@ def test_pbls_search():
         df.to_csv(csv_path, index=False)
         print(f'Wrote {csv_path}')
 
-        csv_path = os.path.join(TESTRESULTSDIR, 'csv', f"pbls_search_lightcurve_Porb{Porb:.3f}_Prot{Prot:.3f}.csv")
+        csv_path = os.path.join(
+            TESTRESULTSDIR, 'csv',
+            f"pbls_search_lightcurve_Porb{Porb:.3f}_Prot{Prot:.3f}_po{poly_order:d}.csv"
+        )
         df = pd.DataFrame({
             'time':time,
             'flux':flux,
@@ -134,7 +144,7 @@ def test_pbls_search():
         df.to_csv(csv_path, index=False)
         print(f'Wrote {csv_path}')
 
-        test_periodogram_processing(Porb=Porb, Prot=Prot, method='trimmean')
+        test_periodogram_processing(Porb=Porb, Prot=Prot, method='trimmean', poly_order=poly_order)
         print(42*'-')
 
 

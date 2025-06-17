@@ -12,7 +12,7 @@ from pbls.pbls import pbls_search
 from pbls.visualization import plot_summary_figure
 from astropy.timeseries import LombScargle
 
-def test_periodogram_processing(Porb=3.1666, Prot=1.4, method='trimmean'):
+def test_periodogram_processing(Porb=3.1666, Prot=1.4, method='trimmean', poly_order=3):
 
     csv_path = os.path.join(TESTRESULTSDIR, 'csv', f"pbls_search_periodogram_Porb{Porb:.3f}_Prot{Prot:.3f}.csv")
     lc_path = os.path.join(TESTRESULTSDIR, 'csv', f"pbls_search_lightcurve_Porb{Porb:.3f}_Prot{Prot:.3f}.csv")
@@ -47,7 +47,6 @@ def test_periodogram_processing(Porb=3.1666, Prot=1.4, method='trimmean'):
     peak_period = pg_results[max_key]['peak_period']
     durations_hr = np.array([1,2,3,4])
     epoch_steps = 50
-    poly_order = 3
     res = pbls_search(time, flux, np.array([peak_period]), durations_hr, epoch_steps, poly_order)
 
     # Extract period-level max SNR and corresponding best model params
@@ -58,7 +57,10 @@ def test_periodogram_processing(Porb=3.1666, Prot=1.4, method='trimmean'):
     # Plot summary figure (based on the peak found after gaussian peak whitening)
     fig = plot_summary_figure(time, flux, x_start, y_start, bp, bm)
 
-    plot_path = os.path.join(TESTRESULTSDIR, 'png', f"test_pbls_search_result_pgproc{method}_Porb{Porb:.3f}_Prot{Prot:.3f}.png")
+    plot_path = os.path.join(
+        TESTRESULTSDIR, 'png',
+        f"test_pbls_search_result_pgproc{method}_Porb{Porb:.3f}_Prot{Prot:.3f}_po{poly_order:d}.png"
+    )
     plt.savefig(plot_path, dpi=300, bbox_inches="tight")
     plt.close()
 
@@ -87,8 +89,10 @@ def test_periodogram_processing(Porb=3.1666, Prot=1.4, method='trimmean'):
     ani = animation.FuncAnimation(fig_anim, animate, frames=frames,
                                 interval=800, blit=False, repeat=False)
 
-    anim_path = os.path.join(TESTRESULTSDIR, 'mp4',
-        f"periodogram_animation_{method}_Porb{Porb:.3f}_Prot{Prot:.3f}.mp4")
+    anim_path = os.path.join(
+        TESTRESULTSDIR, 'mp4',
+        f"periodogram_animation_{method}_Porb{Porb:.3f}_Prot{Prot:.3f}_po{poly_order:d}.mp4"
+    )
     ani.save(anim_path, writer='ffmpeg', dpi=300)
     plt.close(fig_anim)
 
