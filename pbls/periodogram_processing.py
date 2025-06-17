@@ -148,6 +148,13 @@ def trimmean_whitening(x: np.ndarray, y: np.ndarray, trim_fraction: float = 0.1,
         A dict mapping iteration index to a dict with keys:
         'offset','amp','mu','sigma','fwhm','baseline','x','y_start','residual'
     """
+    # TUNABLE HYPERPARAMETERS:
+    # * window_length: default window length for flattening (days)
+    # * Prot_breakpoint: rotation period threshold to switch methods (days) 
+    # * trim_fraction: fraction to trim in trimmean filter
+    # * prefactor: width window to use when Prot < Prot_breakpoint
+    # * Whether to use trim_mean at all, or else some other smoothing method
+
 
     from wotan import flatten
 
@@ -158,7 +165,9 @@ def trimmean_whitening(x: np.ndarray, y: np.ndarray, trim_fraction: float = 0.1,
     N = n * window_length
     assert float(N) > 10, "Periodogram grid too coarse / Window length too small for trimmean"
 
-    if Prot is None or Prot > 2.0:
+    Prot_breakpoint = 2.0
+
+    if Prot is None or Prot > Prot_breakpoint:
         flat_p, trend_p = flatten(
             x, y, method='trim_mean', window_length=0.05, edge_cutoff=0.,
             break_tolerance=0.5, return_trend=True, proportiontocut=trim_fraction
