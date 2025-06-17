@@ -14,8 +14,8 @@ from astropy.timeseries import LombScargle
 
 def test_periodogram_processing(Porb=3.1666, Prot=1.4, method='trimmean', poly_order=3):
 
-    csv_path = os.path.join(TESTRESULTSDIR, 'csv', f"pbls_search_periodogram_Porb{Porb:.3f}_Prot{Prot:.3f}.csv")
-    lc_path = os.path.join(TESTRESULTSDIR, 'csv', f"pbls_search_lightcurve_Porb{Porb:.3f}_Prot{Prot:.3f}.csv")
+    csv_path = os.path.join(TESTRESULTSDIR, 'csv', f"pbls_search_periodogram_Porb{Porb:.3f}_Prot{Prot:.3f}_po{poly_order:d}.csv")
+    lc_path = os.path.join(TESTRESULTSDIR, 'csv', f"pbls_search_lightcurve_Porb{Porb:.3f}_Prot{Prot:.3f}_po{poly_order:d}.csv")
 
     df = pd.read_csv(csv_path)
     x, y = df['period'].values, df['power'].values
@@ -32,13 +32,13 @@ def test_periodogram_processing(Porb=3.1666, Prot=1.4, method='trimmean', poly_o
     frequency = np.linspace(minimum_frequency, maximum_frequency, N_freq)
     power_ls = ls.power(frequency)
     best_freq = frequency[np.argmax(power_ls)]
-    Prot = 1.0 / best_freq
-    print(f"Measured LS period: {Prot:.4f} days")
+    LS_Prot = 1.0 / best_freq
+    print(f"Measured LS period: {LS_Prot:.4f} days")
 
     if method == 'itergaussian':
         pg_results = iterative_gaussian_whitening(x, y)
     elif method == 'trimmean':
-        pg_results = trimmean_whitening(x, y, Prot=Prot)
+        pg_results = trimmean_whitening(x, y, Prot=LS_Prot)
     else:
         raise ValueError(f"Unknown method: {method}. Use 'itergaussian' or 'trimmean'.")
 
