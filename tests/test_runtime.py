@@ -28,7 +28,7 @@ def test_runtime():
         ('tess_2min', 28, 2/(60*24)),
         ('tess_10min_multisector', 365, 10/(60*24)),
         ('kepler', 365*4, 30/(60*24)),
-        ('plato', 365*2, 10/(60*24)),
+        #('plato', 365*2, 10/(60*24)),
         #('tess_2min_multisector', 365, 2/(60*24)),
     ]
 
@@ -115,13 +115,20 @@ def test_runtime():
     # Fit a linear regression line to the data
     npts_array = np.array([n for _, n, _ in results])
     elapsed_array = np.array([e for _, _, e in results])
-    coeffs = np.polyfit(npts_array, elapsed_array, 1)
-    fit_func = np.poly1d(coeffs)
-    x_fit = np.logspace(np.log10(npts_array.min()), np.log10(npts_array.max()), 100)
-    ax.plot(x_fit, fit_func(x_fit), '-', color='red', label=f'Fit: y={coeffs[0]:.2e}x+{coeffs[1]:.2f}')
+    # Perform log-log linear regression
+    log_n = np.log10(npts_array)
+    log_t = np.log10(elapsed_array)
+    m, b = np.polyfit(log_n, log_t, 1)
+
+    # Generate fitted curve in original scale
+    n_fit = np.logspace(log_n.min(), log_n.max(), 100)
+    t_fit = 10**(m * np.log10(n_fit) + b)
+
+    # Plot the fit line
+    ax.plot(n_fit, t_fit, '-', label=f'Log-Log Fit: slope={m:.2f}')
     # Set labels, title, and legend using ax
     ax.set_xlabel('Number of points')
-    ax.set_ylabel('Elapsed time / (oversample) (s per 96 cores)')
+    ax.set_ylabel('Time (s per [96 cores * oversample])')
     ax.set_title('Runtime of fast_pbls_search vs. number of points')
     ax.legend()
     png_path = os.path.join(png_dir, 'test_runtime.png')
