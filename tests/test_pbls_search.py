@@ -5,6 +5,7 @@ import time as timemodule
 
 from pbls.pbls import pbls_search
 from pbls.mp_pbls import fast_pbls_search
+from pbls.period_grids import generate_uniformfreq_period_grid
 from pbls.synthetic import generate_transit_rotation_light_curve
 from pbls.paths import TESTRESULTSDIR
 from pbls.visualization import plot_summary_figure
@@ -56,12 +57,14 @@ def test_pbls_search():
             time, transit_dict, rotation_dict, noise_level=noise_level
         )
 
-        # Define a grid of trial periods and durations for pbls_search.
-        # Here we search for periods in a range that covers the true transit period.
-
+        # Define periods via a linear frequency grid
         # wh3 (non-optimized at 5eec251): 10k periods -> 106 sec.  3k periods -> 46 sec.
-        periods = np.linspace(2, 10, 3000)         # Trial periods in days
-        durations_hr = np.array([1,2,3,4]) # trial durations in units of hours
+        # periods = np.linspace(2, 10, 3000)         # Trial periods in days
+        # durations_hr = np.array([1,2,3,4]) # trial durations in units of hours
+        periods = generate_uniformfreq_period_grid(
+            total_time, cadence, oversample=1, period_min=2.0, period_max=50.0
+        )
+        durations_hr = np.array([1,2,3,4])  # trial durations in units of hours
 
         # Run pbls_search on the synthetic data.
         start_time = timemodule.time()

@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from pbls.synthetic import generate_synthetic_light_curve
 from pbls.pbls import pbls_search
 from pbls.mp_pbls import fast_pbls_search
+from pbls.period_grids import generate_uniformfreq_period_grid
 from pbls.paths import TESTRESULTSDIR
 
 
@@ -49,13 +50,13 @@ def test_runtime():
             print(f"Loaded cached results for {name}")
             continue
 
-        # NB: The Rayleigh resolution is df = 1/T for T the baseline.
-        # The typical recommendation is to search from fmin=1/T up to Nyquist, ~N/2T, where N is number of points.
-        OVERSAMPLE = 1
-        N_periods = int(OVERSAMPLE * N)
-
-        periods = np.linspace(2, np.minimum(total_time/2, 50), N_periods)         # Trial periods in days
-        durations_hr = np.array([1,2,3,4]) # trial durations in units of hours
+        # Generate periods via a linear frequency grid (oversampled more than 1x bc of cutoffs)
+        # "Unity" sampling would run from Pmin=1/T to T/2.  Ofir+14 suggests that this approach
+        # is inefficient.
+        periods = generate_uniformfreq_period_grid(
+            total_time, cadence, oversample=1, period_min=2.0, period_max=50.0
+        )
+        durations_hr = np.array([1,2,3,4])  # trial durations in units of hours
 
         # Compute duration fraction for synthetic light curve
         duration_frac = (durations_hr[0] / 24.0) / periods[0]

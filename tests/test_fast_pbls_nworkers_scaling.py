@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import time as timemodule
 
 from pbls.mp_pbls import fast_pbls_search
+from pbls.period_grids import generate_uniformfreq_period_grid
 from pbls.synthetic import generate_transit_rotation_light_curve
 from pbls.paths import TESTRESULTSDIR
 
@@ -43,8 +44,10 @@ def test_fast_pbls_scaling():
         time, transit_dict, rotation_dict, noise_level=noise_level
     )
 
-    # Define grid for pbls_search
-    periods = np.linspace(2, 10, 1000)
+    # Define periods via a linear frequency grid (oversample=5)
+    periods = generate_uniformfreq_period_grid(
+        total_time, cadence, oversample=1, period_min=2.0, period_max=50.0
+    )
     durations = np.linspace(0.005, 0.02, 10)
 
     nworkers_list = [12, 24, 48, 96]
