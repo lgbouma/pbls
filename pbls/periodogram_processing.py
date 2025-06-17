@@ -205,6 +205,8 @@ def trimmean_whitening(x: np.ndarray, y: np.ndarray, trim_fraction: float = 0.1,
         )
         
     residual = y - trend_p
+    sel = np.isnan(residual)
+    residual[sel] = 0
     
     results = {}
     iter_idx = 0
