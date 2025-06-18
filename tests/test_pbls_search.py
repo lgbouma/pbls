@@ -21,6 +21,9 @@ def test_pbls_search():
     
     # Ensure the test results directory exists
     os.makedirs(TESTRESULTSDIR, exist_ok=True)
+    subdirs = ['png', 'csv', 'mp4']
+    for subdir in subdirs:
+        os.makedirs(os.path.join(TESTRESULTSDIR, subdir), exist_ok=True)
 
     # Define time array
     total_time = 30.0  # days
