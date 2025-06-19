@@ -4,10 +4,20 @@ get_mast_lightcurve: Download MAST light curves via Lightkurve for a given star.
 get_tess_data: thin wrapper for TESS SPOC 120-second cadence light curves.
 """
 import os
-import glob
+from glob import glob
 from astropy.io import fits
 import lightkurve as lk
+from os.path import join
+import numpy as np
 
+# hard cache for common cases
+NAME_TO_TICID = {
+    'HIP 67522': '166527623',
+    'TOI-837': '460205581',
+    'AU Mic': '441420236',
+    'TOI-942': '146520535',
+    'Kepler-1627': '120105470',
+}
 
 def get_tess_data(starid, cache_dir=None):
     """
@@ -35,6 +45,73 @@ def get_tess_data(starid, cache_dir=None):
         cache_dir=cache_dir
     )
 
+    
+def fast_get_mast_lightcurve(starid, mission='TESS', cadence=120, author='SPOC', cache_dir=None):
+    """
+    Download MAST light curves via Lightkurve for a given star.
+
+    This works for TESS, Kepler, or K2 by specifying mission, cadence, and author.
+
+    Parameters
+    ----------
+    starid : str
+        SIMBAD-resolvable target identifier.
+    mission : str, optional
+        Observatory mission name (e.g., 'TESS', 'Kepler', 'K2'). Default is 'TESS'.
+    cadence : int, optional
+        Observing cadence in seconds (e.g., 120 for TESS short cadence, 1800 for K2). Default is 120.
+    author : str, optional
+        Pipeline or author tag (e.g., 'SPOC', 'EVEREST', 'Kepler'). Default is 'SPOC'.
+    cache_dir : str, optional
+        Directory to cache downloaded FITS files. If None, default lightkurve cache is used.
+
+    Returns
+    -------
+    data : list
+        List of FITS table data arrays (hdul[1].data).
+    hdrs : list
+        List of FITS primary headers (hdul[0].header).
+    """
+
+    assert isinstance(cache_dir, str)
+    # Ensure cache directory exists if provided
+    if cache_dir:
+        os.makedirs(cache_dir, exist_ok=True)
+
+    # Check if TESS data were already downloaded.
+    lcfiles = []
+    if mission == 'TESS' and author == 'SPOC' and cadence == 120:
+        ticid = NAME_TO_TICID.get(starid, None)
+        if ticid is None:
+            pass
+        else:
+            lcfiles = np.sort(glob(join(cache_dir, 'mastDownload', 'TESS', f'tess*{ticid}*', f'tess*{ticid}*.fits')))
+        
+    if len(lcfiles) == 0:
+        search_result = lk.search_lightcurve(
+            starid,
+            mission=mission,
+            cadence=cadence,
+            author=author
+        )
+
+        if len(search_result) == 0:
+            return [], []
+
+        # Download all light curves
+        lc_collection = search_result.download_all(download_dir=cache_dir)
+        lcfiles = np.sort([obj.meta['FILENAME'] for obj in lc_collection])
+
+    # Read data and headers
+    data = []
+    hdrs = []
+    for f in lcfiles:
+        hdul = fits.open(f)
+        data.append(hdul[1].data)
+        hdrs.append(hdul[0].header)
+
+    return data, hdrs
+
 def get_mast_lightcurve(starid, mission='TESS', cadence=120, author='SPOC', cache_dir=None):
     """
     Download MAST light curves via Lightkurve for a given star.
@@ -61,6 +138,12 @@ def get_mast_lightcurve(starid, mission='TESS', cadence=120, author='SPOC', cach
     hdrs : list
         List of FITS primary headers (hdul[0].header).
     """
+
+    assert isinstance(cache_dir, str)
+    # Ensure cache directory exists if provided
+    if cache_dir:
+        os.makedirs(cache_dir, exist_ok=True)
+
     # Search for data with specified mission, cadence, and author
     search_result = lk.search_lightcurve(
         starid,
@@ -72,17 +155,9 @@ def get_mast_lightcurve(starid, mission='TESS', cadence=120, author='SPOC', cach
     if len(search_result) == 0:
         return [], []
 
-    # Ensure cache directory exists if provided
-    if cache_dir:
-        os.makedirs(cache_dir, exist_ok=True)
-
     # Download all light curves
-    if cache_dir:
-        lc_collection = search_result.download_all(download_dir=cache_dir)
-        lcfiles = [obj.meta['FILENAME'] for obj in lc_collection]
-    else:
-        lc_collection = search_result.download_all()
-        raise NotImplementedError('get lcfiles')
+    lc_collection = search_result.download_all(download_dir=cache_dir)
+    lcfiles = np.sort([obj.meta['FILENAME'] for obj in lc_collection])
 
     # Read data and headers
     data = []
