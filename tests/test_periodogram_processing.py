@@ -11,6 +11,7 @@ from pbls.periodogram_processing import (
 from pbls.pbls import pbls_search
 from pbls.visualization import plot_summary_figure
 from astropy.timeseries import LombScargle
+from pbls.lc_processing import get_LS_Prot
 
 def test_periodogram_processing(Porb=3.1666, Prot=1.4, method='trimmean', poly_order=3):
 
@@ -22,18 +23,7 @@ def test_periodogram_processing(Porb=3.1666, Prot=1.4, method='trimmean', poly_o
     x_start, y_start = x.copy(), y.copy()
     df = pd.read_csv(lc_path)
     time, flux = df['time'].values, df['flux'].values
-
-    # measure rotation period from the light curve
-    ls = LombScargle(time, flux)
-    Prot_min, Prot_max = 0.1, 15.
-    minimum_frequency = 1.0 / Prot_max
-    maximum_frequency = 1.0 / Prot_min
-    N_freq = 1_000_000
-    frequency = np.linspace(minimum_frequency, maximum_frequency, N_freq)
-    power_ls = ls.power(frequency)
-    best_freq = frequency[np.argmax(power_ls)]
-    LS_Prot = 1.0 / best_freq
-    print(f"Measured LS period: {LS_Prot:.4f} days")
+    LS_Prot = get_LS_Prot(time, flux)
 
     if method == 'itergaussian':
         pg_results = iterative_gaussian_whitening(x, y)
