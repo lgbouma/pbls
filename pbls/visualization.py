@@ -82,7 +82,7 @@ def plot_phase_folded_best(ax, best_model, best_params):
     # Highlight the transit region using best_params (epoch and duration are in phase units)
     ax.axvspan(best_params['epoch'], best_params['epoch'] + (best_params['duration_hr']/24)/period, color='red', alpha=0.3)
 
-def plot_summary_text(ax, best_params):
+def plot_summary_text(ax, best_params, known_params=None):
     """
     Plot a text summary of the best pbls_search results on the provided Axes.
     """
@@ -106,11 +106,15 @@ def plot_summary_text(ax, best_params):
         f"Depth: {depth_ppt:.1f} ppt\n"
         f"SNR: {snr:.1f}"
     )
+    if known_params is not None:
+        known_period = known_params['period']
+        summary += f"\nKnown P: {known_period:.3f} days"
+
     ax.text(0.05, 0.95, summary, transform=ax.transAxes,
             fontsize=12, verticalalignment='top', bbox=dict(facecolor='white', alpha=0.8))
     ax.axis('off')
 
-def plot_summary_figure(time, flux, periods, power, best_params, best_model):
+def plot_summary_figure(time, flux, periods, power, best_params, best_model, post_power=None, known_params=None):
     """
     Create a summary figure with the following panels:
       A: Raw light curve (time vs flux)
@@ -119,23 +123,27 @@ def plot_summary_figure(time, flux, periods, power, best_params, best_model):
       D: Detrended flux (best_model['flux_resid'] vs best_model['time'])
       E: Phase-folded recovered signal (fold best_model['time'] and best_model['flux_resid'] using best_params)
       F: Text summary of best pbls_search results
-      
-    The mosaic layout is:
     
-        AAAAAA
-        BBBBBB
-        CCCCCC
-        DDEEFF
-        DDEEFF
+    Optionally, include the periodogram pre- and post-processing.
     """
-    mosaic = """
-AAAAAA
-BBBBBB
-CCCCCC
-DDEEFF
-DDEEFF
-""".strip()
-    
+
+    if post_power is None:
+        mosaic = """
+                 AAAAAA
+                 BBBBBB
+                 CCCCCC
+                 DDEEFF
+                 DDEEFF
+                 """.strip()
+    else:
+        mosaic = """
+                 AAAAAAAA
+                 BBBBBBBB
+                 CCCCCCCC
+                 DDGGEEFF
+                 DDGGEEFF
+                 """.strip()
+        
     fig, axd = plt.subplot_mosaic(mosaic, figsize=(14, 10))
     
     # Panel A: Raw light curve
@@ -158,7 +166,12 @@ DDEEFF
     plot_phase_folded_best(axd['E'], best_model, best_params)
     
     # Panel F: Text summary of best pbls_search results
-    plot_summary_text(axd['F'], best_params)
+    plot_summary_text(axd['F'], best_params, known_params=known_params)
+
+    if post_power is not None:
+        # Panel B: Periodogram
+        plot_periodogram(axd['G'], periods, post_power)
+
     
     plt.tight_layout()
     return fig
