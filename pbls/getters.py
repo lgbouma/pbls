@@ -68,6 +68,7 @@ def get_mast_lightcurve(starid, mission='TESS', cadence=120, author='SPOC', cach
         cadence=cadence,
         author=author
     )
+
     if len(search_result) == 0:
         return [], []
 
@@ -78,15 +79,10 @@ def get_mast_lightcurve(starid, mission='TESS', cadence=120, author='SPOC', cach
     # Download all light curves
     if cache_dir:
         lc_collection = search_result.download_all(download_dir=cache_dir)
+        lcfiles = [obj.meta['FILENAME'] for obj in lc_collection]
     else:
         lc_collection = search_result.download_all()
-
-    # Gather FITS file paths
-    if cache_dir:
-        lcfiles = glob.glob(os.path.join(cache_dir, '*.fits'))
-    else:
-        lcfiles = []
-        lcfiles = [obj.meta['FILENAME'] for obj in lc_collection]
+        raise NotImplementedError('get lcfiles')
 
     # Read data and headers
     data = []
