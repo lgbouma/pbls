@@ -21,7 +21,7 @@ from astropy import units as u
 import numpy as np
 
 def generate_uniformfreq_period_grid(
-    total_time, cadence, oversample=1, period_min=2.0, period_max=50.0
+    total_time, cadence, oversample=1, period_min=2.0, clamp_period_max=50.0
 ):
     """
     Generate a period grid by uniform sampling in the frequency domain.
@@ -31,14 +31,14 @@ def generate_uniformfreq_period_grid(
         cadence (float): Observation cadence in days.
         oversample (int): Frequency oversampling factor (default=1).
         period_min (float): Minimum period to search (default=2.0 days).
-        period_max (float): Maximum period to search before clamping (default=50.0 days).
+        clamp_period_max (float): Maximum period to search before clamping (default=50.0 days).
 
     Returns:
         numpy.ndarray: Trial periods spanning [period_min, min(total_time/2, period_max)].
     """
 
     # Clamp maximum period to half the observing span
-    period_max = min(total_time / 2.0, period_max)
+    period_max = min(total_time / 2.0, clamp_period_max)
     # Number of frequency samples
     N_freq = int(oversample * total_time / cadence)
     # Frequency bounds
@@ -54,7 +54,7 @@ def generate_Ofir2014_period_grid(
     R_star=1.0,
     M_star=1.0,
     period_min=2.0,
-    period_max=50.0,
+    clamp_period_max=50.0,
     oversampling_factor=1.0,
     n_transits_min=3,
 ):
@@ -66,7 +66,7 @@ def generate_Ofir2014_period_grid(
         R_star (float): Stellar radius in solar radii (default=1.0).
         M_star (float): Stellar mass in solar masses (default=1.0).
         period_min (float): Minimum period to search (default=2.0 days).
-        period_max (float): Maximum period to search (default=50.0 days, clamped to time_span/2).
+        clamp_period_max (float): Maximum period to search (default=50.0 days, clamped to time_span/2).
         oversampling_factor (float): Oversampling factor A denominator (default=1.0).
         n_transits_min (int): Minimum number of transits (default=3).
 
@@ -87,7 +87,7 @@ def generate_Ofir2014_period_grid(
     T = time_span * SECONDS_PER_DAY
 
     # Clamp maximum period to half the observing span
-    period_max = min(time_span / 2.0, period_max)
+    period_max = min(time_span / 2.0, clamp_period_max)
 
     # NOTE: different from what Ofir advocates, which is a Roche-limit cutoff.
     f_min = 1.0 / period_max
