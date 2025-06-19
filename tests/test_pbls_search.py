@@ -31,13 +31,13 @@ def test_pbls_search():
     time = np.arange(0, total_time, cadence)
 
     # Define noise level
-    noise_level = 2e-4
+    noise_level = 2e-3
 
     # Define transit parameters
     transit_dict = {
         'period': 3.1666,      # days
         't0': 2.5,             # central transit time
-        'depth': 0.001,        # fractional flux drop
+        'depth': 0.01,        # fractional flux drop
         'duration_hr': 3.        # fractional duration
     }
 
@@ -59,6 +59,11 @@ def test_pbls_search():
         flux = generate_transit_rotation_light_curve(
             time, transit_dict, rotation_dict, noise_level=noise_level
         )
+        sel = (time > 13) & (time < 17)
+        flux[sel] = np.nan
+        sel = np.isfinite(flux) & np.isfinite(time)
+        time = time[sel]
+        flux = flux[sel]
 
         # Define periods via a linear frequency grid
         # wh3 (non-optimized at 5eec251): 10k periods -> 106 sec.  3k periods -> 46 sec.
@@ -67,7 +72,7 @@ def test_pbls_search():
         periods = generate_uniformfreq_period_grid(
             total_time, cadence, oversample=1, period_min=2.0, clamp_period_max=50.0
         )
-        durations_hr = np.array([1,2,3,4])  # trial durations in units of hours
+        durations_hr = np.array([1,2,3,4,6])  # trial durations in units of hours
 
         # Run pbls_search on the synthetic data.
         start_time = timemodule.time()

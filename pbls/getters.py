@@ -2,6 +2,7 @@
 Contents:
 get_mast_lightcurve: Download MAST light curves via Lightkurve for a given star.
 get_tess_data: thin wrapper for TESS SPOC 120-second cadence light curves.
+    fast_get_mast_lightcurve: As above, but using a hard-coded cache.
 """
 import os
 from glob import glob

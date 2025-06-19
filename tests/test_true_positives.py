@@ -307,7 +307,7 @@ def test_true_positives():
                 time = time.astype(np.float64)
                 flux = flux.astype(np.float64)
 
-                # run TESS analysis at 10-minute binning
+                # run TESS analysis at 30-minute binning
                 if mission == 'TESS':
                     binsize = 30/24/60
                     btimes, bfluxs = time_bin_lightcurve( time, flux, binsize=binsize )
