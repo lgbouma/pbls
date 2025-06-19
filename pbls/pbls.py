@@ -1,5 +1,6 @@
 import numpy as np
 import numba
+import warnings
 
 def split_segments(idx):
     """
@@ -177,8 +178,18 @@ def pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2)
                     f_loc = flux[local_idx]
                     out_local = np.setdiff1d(np.arange(len(local_idx)), in_local)
 
-                    # fit poly to out-of-transit → detrend via numba helper
-                    mval, fcor = detrend_segment(t_loc, f_loc, out_local, poly_order)
+                    # fit poly to out-of-transit using either numba or polyfit.
+                    # _t0 subtraction improves numerical stability.
+                    USE_NUMBA = True
+                    if USE_NUMBA:
+                        _t0 = np.nanmedian(t_loc[out_local])
+                        mval, fcor = detrend_segment(t_loc - _t0, f_loc, out_local, poly_order)
+                    else:
+                        _t0  = np.nanmedian(t_loc[out_local])
+                        p    = np.polyfit(t_loc[out_local] - _t0, f_loc[out_local], poly_order)
+                        poly = np.poly1d(p)
+                        mval = poly(t_loc - _t0)
+                        fcor = f_loc - mval
 
                     local_times.append(t_loc)
                     local_fluxes.append(f_loc)
