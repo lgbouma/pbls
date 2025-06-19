@@ -163,9 +163,9 @@ def trimmean_whitening(x: np.ndarray, y: np.ndarray, trim_fraction: float = 0.1,
     n = len(x) / (x.max() - x.min())
     window_length = 0.05 # in units of days
     N = n * window_length
-    assert float(N) > 10, "Periodogram grid too coarse / Window length too small for trimmean"
+    assert float(N) > 5, "Periodogram grid too coarse / Window length too small for trimmean"
 
-    Prot_breakpoint = 2.0
+    Prot_breakpoint = 3
 
     if Prot is None or Prot > Prot_breakpoint:
         flat_p, trend_p = flatten(

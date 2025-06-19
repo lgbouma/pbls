@@ -65,7 +65,7 @@ def test_pbls_search():
         # periods = np.linspace(2, 10, 3000)         # Trial periods in days
         # durations_hr = np.array([1,2,3,4]) # trial durations in units of hours
         periods = generate_uniformfreq_period_grid(
-            total_time, cadence, oversample=1, period_min=2.0, period_max=50.0
+            total_time, cadence, oversample=1, period_min=2.0, clamp_period_max=50.0
         )
         durations_hr = np.array([1,2,3,4])  # trial durations in units of hours
 

@@ -10,7 +10,6 @@ from pbls.periodogram_processing import (
 )
 from pbls.pbls import pbls_search
 from pbls.visualization import plot_summary_figure
-from astropy.timeseries import LombScargle
 from pbls.lc_processing import get_LS_Prot
 
 def test_periodogram_processing(Porb=3.1666, Prot=1.4, method='trimmean', poly_order=3):

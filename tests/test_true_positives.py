@@ -12,12 +12,11 @@ from pbls.period_grids import generate_uniformfreq_period_grid
 from pbls.paths import TESTRESULTSDIR
 from pbls.visualization import plot_summary_figure
 from pbls.getters import get_mast_lightcurve
-from pbls.lc_processing import get_LS_Prot
+from pbls.lc_processing import get_LS_Prot, time_bin_lightcurve
 from test_periodogram_processing import test_periodogram_processing
 
 # External dependencies
 import lightkurve as lk
-from astrobase.lcmath import time_bin_magseries
 
 PORB_DICT = {
     'HIP 67522 b': 6.9594731, # Barber+24
@@ -97,7 +96,9 @@ def run_pbls_analysis(time, flux, target_name, mission, sector=None, orbital_per
     start_time = timemodule.time()
     epoch_steps = 50
     poly_order = 3
+    print('Starting PBLS search...')
     result = fast_pbls_search(time, flux, periods, durations_hr, epoch_steps=epoch_steps, poly_order=poly_order)
+    #result = pbls_search(time, flux, periods, durations_hr, epoch_steps=epoch_steps, poly_order=poly_order)
     elapsed_time = timemodule.time() - start_time
     print(f"  PBLS search took {elapsed_time:.3f} seconds")
     
@@ -119,7 +120,7 @@ def run_pbls_analysis(time, flux, target_name, mission, sector=None, orbital_per
     fig = plot_summary_figure(time, flux, trial_periods, power_spectrum, best_params, best_model)
     
     # Save plot
-    sector_str = f"_{str(sector).zfill(4)}" if sector else ""
+    sector_str = f"_s{str(sector).zfill(4)}" if sector else ""
     plot_path = os.path.join(
         TESTRESULTSDIR, 'png',
         f"true_positives_{mission}_{target_name.replace(' ', '_')}{sector_str}.png"
@@ -174,7 +175,7 @@ def run_pbls_analysis(time, flux, target_name, mission, sector=None, orbital_per
 
     # Plot summary figure (based on the peak found after gaussian peak whitening)
     post_power = pg_results[max_key]['residual']
-    known_params = {'period': orbital_period}
+    known_params = {'period': orbital_period, 'LS_Prot': LS_Prot}
     fig = plot_summary_figure(time, flux, x_start, y_start, bp, bm, post_power=post_power, known_params=known_params)
 
     plot_path = os.path.join(
@@ -183,6 +184,7 @@ def run_pbls_analysis(time, flux, target_name, mission, sector=None, orbital_per
     )
     plt.savefig(plot_path, dpi=300, bbox_inches="tight")
     plt.close()
+    print(f"  Saved plot: {plot_path}")
 
     return result
 
@@ -200,7 +202,7 @@ def test_true_positives():
     
     # Define target systems by mission
     targets = {
-        'TESS': ['TOI-942', 'TOI-837', 'HIP 67522', 'AU Mic', 'Kepler-1627'],
+        'TESS': ['HIP 67522', 'AU Mic', 'Kepler-1627', 'TOI-837', 'TOI-942'],
         'K2': ['V1298 Tau', 'K2-33'],
         #'Kepler': ['Kepler-1643', 'Kepler-1974', 'Kepler-1975']
     }
@@ -212,8 +214,11 @@ def test_true_positives():
     }
 
     # Flatten to a list of tuples
-    target_list = [(k,v) for k, v in targets.items()]
-   
+    target_list = []
+    for mission in targets.keys():
+        for starid in targets[mission]:
+            target_list.append((mission, starid))
+
     for mission, target_name in target_list:
 
         author = mission_dtype[mission][0]
@@ -223,7 +228,7 @@ def test_true_positives():
         print("-" * 40)
 
         # Step 1: Download light curve for this target
-        datas, hdrs = get_mast_lightcurve(starid, mission=mission, cadence=cadence, author=author, cache_dir=cache_dir)
+        datas, hdrs = get_mast_lightcurve(target_name, mission=mission, cadence=cadence, author=author, cache_dir=cache_dir)
 
         if len(datas) == 0:
             print(f"No data for {target_name} ({mission}), skipping")
@@ -236,9 +241,14 @@ def test_true_positives():
         # Step 3: Run analysis (sectors / k2 quarters separate)
         for data, hdr in zip(datas, hdrs):
 
+            if mission == 'TESS':
+                sector = hdr['SECTOR']
+            else:
+                sector = None
+
             time = data['TIME']
             if mission in ['TESS', 'Kepler']:
-                flux = data['PDCSAP_FLUX']
+                flux = data['SAP_FLUX']
                 qual = data['QUALITY']
             elif mission == 'K2':
                 flux = data['FCOR'] # EVEREST corrected flux
@@ -253,19 +263,22 @@ def test_true_positives():
             time = time[sel]
             flux = flux[sel]
 
+            time = time.astype(np.float64)
+            flux = flux.astype(np.float64)
+
             # run TESS analysis at 10-minute binning
             if mission == 'TESS':
-                bd = time_bin_magseries( time, flux, bin_size=10/24/60 )
-                btimes, bfluxs = bd['binnedtimes'], bd['binnedfluxes']
+                btimes, bfluxs = time_bin_lightcurve( time, flux, binsize=10/24/60 )
                 time, flux = 1.*btimes, 1.*bfluxs
 
             flux /= np.nanmedian(flux)
 
             result = run_pbls_analysis(time, flux, target_name, mission,
-                                        sector=sector_key,
-                                        orbital_period=orbital_period)
+                                       sector=sector,
+                                       orbital_period=orbital_periods[0])
             #FIXME CACHE RESULTS???
 
+    assert 0
     # Print summary
     print("\n" + "=" * 50)
     print("ANALYSIS SUMMARY")

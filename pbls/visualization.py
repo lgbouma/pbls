@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from aesthetic.plot import set_style
 
 def plot_raw_light_curve(ax, time, flux):
     """
@@ -108,7 +109,9 @@ def plot_summary_text(ax, best_params, known_params=None):
     )
     if known_params is not None:
         known_period = known_params['period']
+        LS_Prot = known_params['LS_Prot']
         summary += f"\nKnown P: {known_period:.3f} days"
+        summary += f"\nLS Prot: {LS_Prot:.3f} days"
 
     ax.text(0.05, 0.95, summary, transform=ax.transAxes,
             fontsize=12, verticalalignment='top', bbox=dict(facecolor='white', alpha=0.8))
@@ -144,6 +147,8 @@ def plot_summary_figure(time, flux, periods, power, best_params, best_model, pos
                  DDGGEEFF
                  """.strip()
         
+    set_style("science")
+
     fig, axd = plt.subplot_mosaic(mosaic, figsize=(14, 10))
     
     # Panel A: Raw light curve
