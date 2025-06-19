@@ -121,7 +121,7 @@ def run_pbls_analysis(time, flux, target_name, mission, sector_str=None, orbital
     # Run fast_pbls_search
     start_time = timemodule.time()
     epoch_steps = 50
-    poly_order = 3
+    poly_order = 2
     print('Starting PBLS search...')
     result = fast_pbls_search(time, flux, periods, durations_hr, epoch_steps=epoch_steps, poly_order=poly_order)
     #result = pbls_search(time, flux, periods, durations_hr, epoch_steps=epoch_steps, poly_order=poly_order)
@@ -227,8 +227,9 @@ def test_true_positives():
     
     # Define target systems by mission
     targets = {
-        #'TESS': ['TOI-942', 'HIP 67522', 'AU Mic', 'Kepler-1627', 'TOI-837'],
-        'K2': ['K2-33', 'V1298 Tau'],
+        'TESS': ['TOI-942', 'HIP 67522', 'AU Mic', 'Kepler-1627', 'TOI-837'],
+        #'TESS': ['TOI-837'],
+        #'K2': ['K2-33', 'V1298 Tau'],
         #'Kepler': ['Kepler-1643', 'Kepler-1974', 'Kepler-1975']
     }
 
@@ -329,31 +330,10 @@ def test_true_positives():
             result = run_pbls_analysis(time, flux, target_name, mission,
                                        sector_str=sector_str,
                                        orbital_period=orbital_periods[0])
-            #FIXME CACHE RESULTS???
+
 
     assert 0
-    # Print summary
-    print("\n" + "=" * 50)
-    print("ANALYSIS SUMMARY")
-    print("=" * 50)
-    
-    for mission, targets in results.items():
-        print(f"\n{mission}:")
-        for target_name, target_results in targets.items():
-            if mission == 'TESS' and isinstance(target_results, dict):
-                print(f"  {target_name}: {len(target_results)} sectors analyzed")
-                for sector, result in target_results.items():
-                    bp = result['best_params']
-                    print(f"    {sector}: P={bp['period']:.4f}d, SNR={bp['snr']:.2f}")
-            else:
-                if target_results is not None:
-                    bp = target_results['best_params']
-                    print(f"  {target_name}: P={bp['period']:.4f}d, SNR={bp['snr']:.2f}")
-                else:
-                    print(f"  {target_name}: Analysis failed")
-    
-    print("\nTrue positives test completed successfully!")
-    return results
+    # NOTE: could cache results
 
 
 if __name__ == "__main__":
