@@ -96,10 +96,12 @@ def pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2)
                'all_in_transit_flux': in-transit flux after detrending,
                'all_out_transit_flux': out-of-transit flux after detrending.
     """
+
     best_snr = -np.inf
     best_period = None
     best_duration_hr = None
     best_epoch = None
+    best_epoch_days = None
     best_depth = None
     
     # These will store the best model's concatenated arrays
@@ -130,7 +132,7 @@ def pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2)
 
         durations = (durations_hr / 24.) / trial_period
         
-        # Loop over trial durations
+        # Loop over trial durations (units: fraction of period)
         for trial_duration in durations:
            
             # Define possible start phases (epochs) from 0 to (1 - duration)
@@ -230,7 +232,8 @@ def pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2)
                     best_snr = snr
                     best_period = trial_period
                     best_duration_hr = trial_duration * trial_period * 24.0  # convert to hours
-                    best_epoch = epoch
+                    best_epoch = epoch # phase units
+                    best_epoch_days = epoch * trial_period + tmin # time units
                     best_depth = depth
                     
                     best_local_time = local_time_concat
@@ -249,6 +252,7 @@ def pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2)
             'period': best_period,
             'duration_hr': best_duration_hr,
             'epoch': best_epoch,
+            'epoch_days': best_epoch_days,
             'depth': best_depth,
             'snr': best_snr
         },

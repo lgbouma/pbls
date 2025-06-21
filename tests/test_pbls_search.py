@@ -75,19 +75,20 @@ def test_pbls_search():
         sel = np.isfinite(flux) & np.isfinite(time)
         time = time[sel]
         flux = flux[sel]
+        time += 3000
 
         # Define periods via a linear frequency grid
         # wh3 (non-optimized at 5eec251): 10k periods -> 106 sec.  3k periods -> 46 sec.
         # periods = np.linspace(2, 10, 3000)         # Trial periods in days
         # durations_hr = np.array([1,2,3,4]) # trial durations in units of hours
         periods = generate_uniformfreq_period_grid(
-            total_time, cadence, oversample=oversample, period_min=2.0, clamp_period_max=50.0
+            total_time, cadence, oversample=oversample, period_min=2.0, clamp_period_max=10.0
         )
         durations_hr = np.array([1,2,3,4,6])  # trial durations in units of hours
 
         # Run pbls_search on the synthetic data.
         start_time = timemodule.time()
-        result = fast_pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=poly_order)
+        result = fast_pbls_search(time, flux, periods, durations_hr, epoch_steps=100, poly_order=poly_order)
         #result = pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=poly_order)
         elapsed_time = timemodule.time() - start_time
         print(f"fast_pbls_search took {elapsed_time:.3f} seconds")
@@ -95,6 +96,7 @@ def test_pbls_search():
         Porb = transit_dict['period']
         Prot = rotation_dict['prot']
         known_params = {'orbital_period':Porb, 'Prot':Prot}
+        # TODO FIXME probably want a real path..
         png_path = 'temp.png'
         plot_pbls_coeffs(result, known_params, png_path)
 

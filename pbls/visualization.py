@@ -8,6 +8,7 @@ Small functions:
     plot_raw_light_curve
     plot_periodogram
     plot_best_model
+    plot_phase_folded_best
     plot_detrended_flux
     plot_summary_text
 """
@@ -87,27 +88,36 @@ def plot_phase_folded_best(ax, best_model, best_params):
     Plot the phase-folded recovered signal on the provided Axes.
     The best_model['time'] and best_model['flux_resid'] are folded using best_params['period'].
     """
+
+    t0 = best_params['epoch_days']
     period = best_params['period']
-    phase = (best_model['time'] % period) / period
+    phase = ( (best_model['time']-t0) % period) / period
+    phase[phase > 0.5] -= 1.0  # shift phase to [-0.5, 0.5]
+    phase_ingr = 0.  # let time = t0 above
+    phase_egr  = (best_params['duration_hr']/24)/period
+
     ax.plot(phase, best_model['flux_resid'], 'k.', markersize=2)
     ax.set_xlabel("Phase")
     ax.set_ylabel("Detrended Flux")
     ax.set_title("Phase-Folded Recovered Signal")
     # Highlight the transit region using best_params (epoch and duration are in phase units)
-    ax.axvspan(best_params['epoch'], best_params['epoch'] + (best_params['duration_hr']/24)/period, color='red', alpha=0.3)
-
+    ax.axvspan(
+        phase_ingr,
+        phase_egr,
+        color='red', alpha=0.1
+    )
+    
 def plot_summary_text(ax, best_params, known_params=None):
     """
     Plot a text summary of the best pbls_search results on the provided Axes.
     """
     period = best_params['period']
-    epoch = best_params['epoch']
+    t0 = best_params['epoch_days']
     duration_hr = best_params['duration_hr']
     depth = best_params['depth']
     snr = best_params['snr']
     
     # Convert phase to days for epoch and transit duration.
-    epoch_days = epoch * period
     duration_days = duration_hr * 24
     duration = duration_days / period
     depth_ppt = depth * 1000
@@ -115,7 +125,7 @@ def plot_summary_text(ax, best_params, known_params=None):
     summary = (
         f"Best pbls_search Results:\n"
         f"Period: {period:.3f} days\n"
-        f"Epoch: {epoch_days:.3f} days\n"
+        f"t0: {t0:.3f} \n"
         f"Duration: {duration_hr:.1f} hours\n"
         f"Depth: {depth_ppt:.1f} ppt\n"
         f"SNR: {snr:.1f}"
