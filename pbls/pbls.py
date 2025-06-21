@@ -42,7 +42,7 @@ def detrend_segment(t_loc, f_loc, out_idx, poly_order):
         for j in range(M):
             acc += coeffs[j] * (t_loc[i] ** (poly_order - j))
         mval[i] = acc
-    return mval, f_loc - mval
+    return mval, f_loc - mval, coeffs
 
 def pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2):
     """
@@ -111,6 +111,7 @@ def pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2)
     best_all_out_transit_flux = None
     
     power_list = []
+    coeff_list = []
     
     tmin = np.min(time)
     tmax = np.max(time)
@@ -124,6 +125,7 @@ def pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2)
     for trial_period in periods:
 
         period_max_snr = -np.inf
+        coeffs_max_snr = None
         phase = ((time - tmin) % trial_period) / trial_period # pre-fold once per period
 
         durations = (durations_hr / 24.) / trial_period
@@ -172,6 +174,7 @@ def pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2)
                 all_in_flux = []; all_out_flux = []
                 local_times = []; local_fluxes = []
                 models      = []; residuals = []                
+                poly_coeffs = []
 
                 for (local_idx, in_local) in good_transits:
                     t_loc = time[local_idx]
@@ -183,7 +186,7 @@ def pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2)
                     USE_NUMBA = True
                     if USE_NUMBA:
                         _t0 = np.nanmedian(t_loc[out_local])
-                        mval, fcor = detrend_segment(t_loc - _t0, f_loc, out_local, poly_order)
+                        mval, fcor, poly = detrend_segment(t_loc - _t0, f_loc, out_local, poly_order)
                     else:
                         _t0  = np.nanmedian(t_loc[out_local])
                         p    = np.polyfit(t_loc[out_local] - _t0, f_loc[out_local], poly_order)
@@ -191,6 +194,7 @@ def pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2)
                         mval = poly(t_loc - _t0)
                         fcor = f_loc - mval
 
+                    poly_coeffs.append(poly)
                     local_times.append(t_loc)
                     local_fluxes.append(f_loc)
                     models.append(mval)
@@ -206,6 +210,7 @@ def pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2)
                 local_flux_concat = np.concatenate(local_fluxes)
                 model_flux_concat = np.concatenate(models)
                 flux_resid_concat = np.concatenate(residuals)
+                poly_coeffs_concat = np.vstack(poly_coeffs)
                 
                 # Compute the transit depth and SNR on the detrended (residual) data
                 depth = np.mean(all_out_transit_flux) - np.mean(all_in_transit_flux)
@@ -218,6 +223,7 @@ def pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2)
                 # Update period-level max SNR
                 if snr > period_max_snr:
                     period_max_snr = snr
+                    coeffs_max_snr = poly_coeffs_concat
                 
                 # Update global best parameters and best-model arrays if this trial is best so far
                 if snr > best_snr:
@@ -233,8 +239,9 @@ def pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2)
                     best_flux_resid = flux_resid_concat
                     best_all_in_transit_flux = all_in_transit_flux
                     best_all_out_transit_flux = all_out_transit_flux
-        
+
         power_list.append(period_max_snr)
+        coeff_list.append(coeffs_max_snr)
     
     # Construct output dictionary with nested dictionaries
     result = {
@@ -246,6 +253,7 @@ def pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2)
             'snr': best_snr
         },
         'power': np.array(power_list),
+        'coeffs': coeff_list,
         'periods': periods,
         'best_model': {
             'time': best_local_time,
@@ -253,7 +261,7 @@ def pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2)
             'model_flux': best_model_flux,
             'flux_resid': best_flux_resid,
             'all_in_transit_flux': best_all_in_transit_flux,
-            'all_out_transit_flux': best_all_out_transit_flux
+            'all_out_transit_flux': best_all_out_transit_flux,
         }
     }
     

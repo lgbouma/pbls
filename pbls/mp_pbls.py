@@ -9,9 +9,10 @@ def _worker(args):
     res = pbls_search(time, flux, np.array([trial_period]), durations_hr, epoch_steps, poly_order)
     # Extract period-level max SNR and corresponding best model params
     power0 = res['power'][0]
+    coeffs = res['coeffs'][0]
     bp = res['best_params']
     bm = res['best_model']
-    return (trial_period, power0, bp['snr'], bp['duration_hr'], bp['epoch'], bp['depth'], bm)
+    return (trial_period, power0, bp['snr'], bp['duration_hr'], bp['epoch'], bp['depth'], bm, coeffs)
 
 
 def fast_pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2, nworkers = mp.cpu_count()):
@@ -30,9 +31,10 @@ def fast_pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_ord
     # Unpack results
     power_list = [r[1] for r in results]
     snr_list = [r[2] for r in results]
+    coeffs_list = [r[-1] for r in results]
     # Identify global best index
     best_idx = int(np.argmax(snr_list))
-    best_period, _, best_snr, best_duration_hr, best_epoch, best_depth, best_model = results[best_idx]
+    best_period, _, best_snr, best_duration_hr, best_epoch, best_depth, best_model, _ = results[best_idx]
 
     # Build output matching pbls_search signature
     return {
@@ -44,6 +46,7 @@ def fast_pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_ord
             'snr': best_snr
         },
         'power': np.array(power_list),
+        'coeffs': coeffs_list,
         'periods': periods,
         'best_model': best_model
     }
