@@ -1,3 +1,16 @@
+"""
+Contents:
+    
+Big wrappers:
+    plot_summary_figure
+
+Small functions:
+    plot_raw_light_curve
+    plot_periodogram
+    plot_best_model
+    plot_detrended_flux
+    plot_summary_text
+"""
 import matplotlib.pyplot as plt
 import numpy as np
 from aesthetic.plot import set_style
@@ -180,3 +193,72 @@ def plot_summary_figure(time, flux, periods, power, best_params, best_model, pos
     
     plt.tight_layout()
     return fig
+
+
+def plot_pbls_coeffs(pbls_result, known_params, png_path):
+    """
+    As-implemented, for each period this function takes the coefficients from
+    each window of the highest-SNR model, averages them, and constructs a
+    "penalty" (L1-norm analog) to weight against solutions for which all the
+    coefficients are far from zero.
+
+    This is a totally made-up heuristic, and should be revisited before
+    implementing it in any kind of real pipeline.
+    """
+
+    result = pbls_result
+    Porb, Prot = known_params['orbital_period'], known_params['Prot']
+    
+    coeff_summstat = np.array([result['coeffs'][i].mean(axis=0) for i in range(len(result['coeffs']))])
+    # optional...
+    #coeff_summstat = np.array([result['coeffs'][i].sum(axis=0) for i in range(len(result['coeffs']))])
+
+    scales = [
+        (np.nanmax(np.abs(coeff_summstat[:,i])) - np.nanmin(np.abs(coeff_summstat[:,i])))
+        /
+        (np.nanmax(result['power']) - np.nanmin(result['power']))
+        for i in range(2)
+    ]
+    penalty = (
+        0.5 * np.abs(coeff_summstat[:,1]) / scales[1]
+        +
+        0.5 * np.abs(coeff_summstat[:,0]) / scales[0]
+    )
+
+    plt.close("all")
+    mosaic = """
+            AAAAAA..
+            BBBBBBDD
+            CCCCCCEE
+            FFFFFF..
+            GGGGGG..
+            """.strip()
+    fig, axs = plt.subplot_mosaic(mosaic, figsize=(12, 10))
+    axs['A'].plot(result['periods'], result['power'], lw=0.5, color='k')
+    axs['B'].plot(result['periods'], np.abs(coeff_summstat[:,0]), lw=0.5, color='k')
+    axs['C'].plot(result['periods'], np.abs(coeff_summstat[:,1]), lw=0.5, color='k')
+    axs['F'].plot(result['periods'], penalty, lw=0.5, color='k')
+    axs['G'].plot(result['periods'], result['power'] - penalty, lw=0.5, color='k')
+
+    _axs = [axs['A'], axs['B'], axs['C'], axs['F'], axs['G']]
+
+    for ax in _axs:
+        ylim = ax.get_ylim()
+        ax.vlines(Porb, ylim[0], ylim[1], color='C0', lw=0.5, ls='--', zorder=-1)
+        ax.vlines(Prot, ylim[0], ylim[1], color='C1', lw=0.5, ls=':', zorder=-1)
+        ax.set_ylim(ylim)
+
+    axs['A'].set_ylabel('Power')
+    axs['B'].set_ylabel('|Quad coeff|')
+    axs['C'].set_ylabel('|Lin coeff|')
+    axs['F'].set_ylabel('Penalty')
+    axs['G'].set_ylabel('Power - Penalty')
+    axs['G'].set_xlabel('Period (days)')
+
+    axs['D'].hist(np.abs(coeff_summstat[:,0]), bins=100, color='k', histtype='step')
+    axs['D'].set_yscale('log')
+    axs['E'].hist(np.abs(coeff_summstat[:,1]), bins=100, color='k', histtype='step')
+    axs['E'].set_yscale('log')
+    axs['G'].set_ylim([0, np.nanmax(result['power'])])
+    fig.tight_layout()
+    fig.savefig(png_path, dpi=300, bbox_inches='tight')

@@ -8,7 +8,7 @@ from pbls.mp_pbls import fast_pbls_search
 from pbls.period_grids import generate_uniformfreq_period_grid
 from pbls.synthetic import generate_transit_rotation_light_curve
 from pbls.paths import TESTRESULTSDIR
-from pbls.visualization import plot_summary_figure
+from pbls.visualization import plot_summary_figure, plot_pbls_coeffs
 
 from test_periodogram_processing import test_periodogram_processing
 
@@ -25,24 +25,35 @@ def test_pbls_search():
     for subdir in subdirs:
         os.makedirs(os.path.join(TESTRESULTSDIR, subdir), exist_ok=True)
 
-    # Define time array
+    # default set
     total_time = 30.0  # days
     cadence = 0.01     # days
     time = np.arange(0, total_time, cadence)
-
-    # Define noise level
-    noise_level = 2e-3
-
-    # Define transit parameters
+    noise_level = 1e-3
     transit_dict = {
-        'period': 3.1666,      # days
-        't0': 2.5,             # central transit time
+        'period': 3.1666,     # days
+        't0': 2.5,            # central transit time
         'depth': 0.01,        # fractional flux drop
-        'duration_hr': 3.        # fractional duration
+        'duration_hr': 3.5,     # duration (hours)
     }
+    #Prots = [3.5, 3.3, 2.5, 1.4, 0.85, 0.7]
+    Prots = [3.5]
+    poly_order = 2
+    oversample = 1
 
-    Prots = [3.5, 3.3, 2.5, 1.4, 0.85, 0.7]
-    poly_order = 3
+    #total_time = 90.0  # days
+    #cadence = 0.01     # days
+    #time = np.arange(0, total_time, cadence)
+    #noise_level = 2e-3
+    #transit_dict = {
+    #    'period': 3.19,     # days
+    #    't0': 2.5,            # central transit time
+    #    'depth': 0.01,        # fractional flux drop
+    #    'duration_hr': 3.,     # duration (hours)
+    #}
+    #Prots = [3.5]
+    #poly_order = 2
+    #oversample = 2
 
     for Prot in Prots:
 
@@ -70,16 +81,22 @@ def test_pbls_search():
         # periods = np.linspace(2, 10, 3000)         # Trial periods in days
         # durations_hr = np.array([1,2,3,4]) # trial durations in units of hours
         periods = generate_uniformfreq_period_grid(
-            total_time, cadence, oversample=1, period_min=2.0, clamp_period_max=50.0
+            total_time, cadence, oversample=oversample, period_min=2.0, clamp_period_max=50.0
         )
         durations_hr = np.array([1,2,3,4,6])  # trial durations in units of hours
 
         # Run pbls_search on the synthetic data.
         start_time = timemodule.time()
         result = fast_pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=poly_order)
-        #result = pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=3)
+        #result = pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=poly_order)
         elapsed_time = timemodule.time() - start_time
         print(f"fast_pbls_search took {elapsed_time:.3f} seconds")
+
+        Porb = transit_dict['period']
+        Prot = rotation_dict['prot']
+        known_params = {'orbital_period':Porb, 'Prot':Prot}
+        png_path = 'temp.png'
+        plot_pbls_coeffs(result, known_params, png_path)
 
         # Extract best parameters and best model from the result dictionary.
         best_params = result['best_params']
@@ -104,7 +121,6 @@ def test_pbls_search():
         snr_per_transit = (true_depth / noise_p2p) * ( gamma * true_duration * true_period )**(1/2)
         predicted_snr = snr_per_transit * N_transits**(1/2)
         print(f"Predicted SNR (P2PRMS): {predicted_snr:.3f}")
-
 
         # Print out the best parameters found.
         print("Best period found: {:.4f} days".format(best_params['period']))
@@ -157,6 +173,9 @@ def test_pbls_search():
 
         test_periodogram_processing(Porb=Porb, Prot=Prot, method='trimmean', poly_order=poly_order)
         print(42*'-')
+
+        import IPython; IPython.embed()
+        #TODO TODO: LOOK AT THE BEST_COEFFS...
 
 
 if __name__ == "__main__":
