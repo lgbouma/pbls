@@ -196,7 +196,8 @@ def trimmean_whitening(x: np.ndarray, y: np.ndarray, trim_fraction: float = 0.1,
 
         # in the masked regions, use a 5x smaller window length (-> 0.01 days by default)
         window_lengths = np.ones(len(x)) * window_length # default window length
-        window_lengths[combined_mask] = np.ones(len(x[combined_mask])) * window_length / 5
+        if np.any(combined_mask):
+            window_lengths[combined_mask] = np.ones(len(x[combined_mask])) * window_length / 5
 
         flat_p, trend_p = variablewindow_flatten(
             x, y, method='trim_mean', window_length=window_lengths,
