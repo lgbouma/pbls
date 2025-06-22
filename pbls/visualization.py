@@ -1,10 +1,11 @@
 """
 Contents:
     
-Big wrappers:
+Big plots:
     plot_summary_figure
+    plot_pbls_coeffs
 
-Small functions:
+Small helper functions:
     plot_raw_light_curve
     plot_periodogram
     plot_best_model

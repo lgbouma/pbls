@@ -44,6 +44,7 @@ def detrend_segment(t_loc, f_loc, out_idx, poly_order):
         mval[i] = acc
     return mval, f_loc - mval, coeffs
 
+
 def pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2):
     """
     A Box Least Squares (BLS) variant that fits and subtracts a local polynomial trend

@@ -106,6 +106,8 @@ def run_pbls_analysis(time, flux, target_name, mission, sector_str=None, orbital
     periods = generate_uniformfreq_period_grid(
         total_time, cadence, oversample=1, period_min=2.0, clamp_period_max=20.0
     )
+    #FIXME this is for speed
+    periods = np.linspace(orbital_period-0.3, orbital_period+0.3, 500)
     durations_hr = np.array([1, 2, 3, 4, 6])
     
     print(f"Running PBLS analysis for {target_name} ({mission})")
@@ -120,8 +122,8 @@ def run_pbls_analysis(time, flux, target_name, mission, sector_str=None, orbital
     
     # Run fast_pbls_search
     start_time = timemodule.time()
-    epoch_steps = 50
-    poly_order = 2
+    epoch_steps = 400 # FIXME this should be implemented as some rigorous condition, not an input number
+    poly_order = 3
     print('Starting PBLS search...')
     result = fast_pbls_search(time, flux, periods, durations_hr, epoch_steps=epoch_steps, poly_order=poly_order)
     #result = pbls_search(time, flux, periods, durations_hr, epoch_steps=epoch_steps, poly_order=poly_order)
@@ -227,10 +229,9 @@ def test_true_positives():
     
     # Define target systems by mission
     targets = {
-        'TESS': ['TOI-942', 'HIP 67522', 'AU Mic', 'Kepler-1627', 'TOI-837'],
-        #'TESS': ['TOI-837'],
-        #'K2': ['K2-33', 'V1298 Tau'],
-        #'Kepler': ['Kepler-1643', 'Kepler-1974', 'Kepler-1975']
+        'TESS': ['AU Mic', 'TOI-942', 'HIP 67522', 'Kepler-1627', 'TOI-837'],
+        'K2': ['K2-33', 'V1298 Tau'],
+        'Kepler': ['Kepler-1627', 'Kepler-1643', 'Kepler-1974', 'Kepler-1975']
     }
 
     mission_dtype = {
@@ -281,16 +282,25 @@ def test_true_positives():
                     sector = hdr['SECTOR']
                     if sector not in group:
                         continue
+                elif mission == 'Kepler':
+                    quarter = hdr['QUARTER']
+                    sector = None
+                    if quarter not in [2,3]:
+                        # For these tests, just use quarters 2 and 3
+                        continue
                 else:
                     sector = None
 
                 time = data['TIME']
-                if mission in ['TESS', 'Kepler']:
+                if mission == 'TESS':
                     flux = data['SAP_FLUX']
                     qual = data['QUALITY']
                 elif mission == 'K2':
                     flux = data['FCOR'] # EVEREST corrected flux
                     qual = np.zeros_like(time) # K2 data doesn't have QUALITY column
+                elif mission == 'Kepler':
+                    flux = data['SAP_FLUX']
+                    qual = data['SAP_QUALITY']
                 
                 # processing:
                 # Drop non-zero quality flags; require finite time and flux;
@@ -352,7 +362,6 @@ def test_true_positives():
             result = run_pbls_analysis(time, flux, target_name, mission,
                                        sector_str=sector_str,
                                        orbital_period=orbital_periods[0])
-
 
     assert 0
     # NOTE: could cache results
