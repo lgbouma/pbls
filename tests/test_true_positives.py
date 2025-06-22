@@ -291,8 +291,16 @@ def test_true_positives():
                 elif mission == 'K2':
                     flux = data['FCOR'] # EVEREST corrected flux
                     qual = np.zeros_like(time) # K2 data doesn't have QUALITY column
-
-                # drop non-zero quality flags
+                
+                # processing:
+                # Drop non-zero quality flags; require finite time and flux;
+                # require positive flux; set dtype to float64; median normalize
+                # sliding clip [100,3]*MAD over LS_Prot/10 to trim flares;
+                # re-require finite time and flux.
+                # The flare window requires at least 10 points per window
+                # -> K2/Kepler means at least 5 hours window;
+                # TESS means at least 20 minute window;
+                # but standard window is 10% of LS_Prot.
                 sel = (qual == 0)
                 time = time[sel]
                 flux = flux[sel]
@@ -307,14 +315,28 @@ def test_true_positives():
 
                 time = time.astype(np.float64)
                 flux = flux.astype(np.float64)
+                
+                flux /= np.nanmedian(flux)
 
-                # run TESS analysis at 30-minute binning
+                LS_Prot = get_LS_Prot(time, flux)
+                cadence = np.nanmedian(np.diff(time))
+                window_length = np.maximum(LS_Prot/20, cadence * 10)
+
+                clipped_flux = slide_clip(
+                    time, flux, window_length=window_length,
+                    low=100, high=2, method='mad', center='median'
+                )
+
+                sel = np.isfinite(time) & np.isfinite(clipped_flux)
+                time = time[sel]
+                flux = 1.* clipped_flux[sel]
+                assert len(time) == len(flux)
+
+                # run TESS analysis at 30-minute binning after flare removal
                 if mission == 'TESS':
                     binsize = 30/24/60
                     btimes, bfluxs = time_bin_lightcurve( time, flux, binsize=binsize )
                     time, flux = 1.*btimes, 1.*bfluxs
-
-                flux /= np.nanmedian(flux)
 
                 _time.append(time)
                 _flux.append(flux)
