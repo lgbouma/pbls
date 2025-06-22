@@ -19,6 +19,12 @@ NAME_TO_TICID = {
     'TOI-942': '146520535',
     'Kepler-1627': '120105470',
 }
+NAME_TO_KICID = {
+    'Kepler-1627': '6184894',
+    'Kepler-1643': '8653134',
+    'Kepler-1974': '10736489',
+    'Kepler-1975': '8873450',
+}
 
 def get_tess_data(starid, cache_dir=None):
     """
@@ -87,6 +93,14 @@ def fast_get_mast_lightcurve(starid, mission='TESS', cadence=120, author='SPOC',
             pass
         else:
             lcfiles = np.sort(glob(join(cache_dir, 'mastDownload', 'TESS', f'tess*{ticid}*', f'tess*{ticid}*.fits')))
+
+    elif mission == 'Kepler' and author == 'Kepler' and cadence == 1800:
+        kicid = NAME_TO_KICID.get(starid, None)
+        if kicid is None:
+            pass
+        else:
+            lcfiles = np.sort(glob(join(cache_dir, 'mastDownload', 'Kepler', f'kplr*{kicid}*', f'kplr*{kicid}*.fits')))
+
         
     if len(lcfiles) == 0:
         search_result = lk.search_lightcurve(
