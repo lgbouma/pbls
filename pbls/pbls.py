@@ -45,7 +45,7 @@ def detrend_segment(t_loc, f_loc, out_idx, poly_order):
     return mval, f_loc - mval, coeffs
 
 
-def pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2):
+def pbls_search(time, flux, periods, durations_hr, poly_order=2):
     """
     A Box Least Squares (BLS) variant that fits and subtracts a local polynomial trend
     in the time domain around each transit event to mitigate stellar spot-induced variability.
@@ -76,9 +76,6 @@ def pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2)
         Array of trial orbital periods.
     durations_hr : np.ndarray
         Array of trial durations in units of hours.
-    epoch_steps : int, optional
-        Number of trial start phases for each (period, duration_hr) combination.
-        The phases range from 0 to (1 - frac_duration).
     poly_order : int, optional
         Order of the local polynomial to be fit in time (e.g., 2 for quadratic).
     
@@ -137,7 +134,9 @@ def pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=2)
         for trial_duration in durations:
            
             # Define possible start phases (epochs) from 0 to (1 - duration)
-            epochs = np.linspace(0, 1 - trial_duration, epoch_steps)
+            _oversample = 3
+            dphase = trial_duration / _oversample
+            epochs = np.arange(0, 1 + dphase, dphase)
 
             half_pd = trial_duration * 0.5
 
