@@ -54,7 +54,7 @@ setup(
     name='pbls',
     version=version,
     description=(
-        "Search for Transits in the presence of Rotation"
+        "PBLS"
     ),
     long_description=readme(),
     long_description_content_type="text/markdown",
