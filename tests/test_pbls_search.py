@@ -88,8 +88,8 @@ def test_pbls_search():
 
         # Run pbls_search on the synthetic data.
         start_time = timemodule.time()
-        result = fast_pbls_search(time, flux, periods, durations_hr, epoch_steps=100, poly_order=poly_order)
-        #result = pbls_search(time, flux, periods, durations_hr, epoch_steps=50, poly_order=poly_order)
+        result = fast_pbls_search(time, flux, periods, durations_hr, poly_order=poly_order)
+        #result = pbls_search(time, flux, periods, durations_hr, poly_order=poly_order)
         elapsed_time = timemodule.time() - start_time
         print(f"fast_pbls_search took {elapsed_time:.3f} seconds")
 

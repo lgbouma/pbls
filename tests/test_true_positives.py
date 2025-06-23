@@ -122,11 +122,10 @@ def run_pbls_analysis(time, flux, target_name, mission, sector_str=None, orbital
     
     # Run fast_pbls_search
     start_time = timemodule.time()
-    epoch_steps = 400 # FIXME this should be implemented as some rigorous condition, not an input number
     poly_order = 3
     print('Starting PBLS search...')
-    result = fast_pbls_search(time, flux, periods, durations_hr, epoch_steps=epoch_steps, poly_order=poly_order)
-    #result = pbls_search(time, flux, periods, durations_hr, epoch_steps=epoch_steps, poly_order=poly_order)
+    result = fast_pbls_search(time, flux, periods, durations_hr, poly_order=poly_order)
+    #result = pbls_search(time, flux, periods, durations_hr, poly_order=poly_order)
     elapsed_time = timemodule.time() - start_time
     print(f"  PBLS search took {elapsed_time:.3f} seconds")
     
@@ -193,7 +192,7 @@ def run_pbls_analysis(time, flux, target_name, mission, sector_str=None, orbital
     # read the whitened periodogram results; recalculate best-fit model params
     max_key = max(np.array(list(pg_results.keys())))
     peak_period = pg_results[max_key]['peak_period']
-    res = pbls_search(time, flux, np.array([peak_period]), durations_hr, epoch_steps, poly_order)
+    res = pbls_search(time, flux, np.array([peak_period]), durations_hr, poly_order)
 
     # Extract period-level max SNR and corresponding best model params
     power0 = res['power'][0]

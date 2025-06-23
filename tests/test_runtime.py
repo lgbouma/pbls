@@ -78,7 +78,6 @@ def test_runtime():
             flux,
             periods,
             durations_hr,
-            epoch_steps=50,
             poly_order=2
         )
         elapsed = timemodule.time() - start
