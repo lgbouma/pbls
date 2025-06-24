@@ -253,7 +253,7 @@ def test_true_positives():
         print(f"\nProcessing {target_name} ({mission})")
         print("-" * 40)
 
-        # Step 1: Download light curve for this target
+        # Step 1: Download light curves for this target
         datas, hdrs = fast_get_mast_lightcurve(target_name, mission=mission, cadence=cadence, author=author, cache_dir=cache_dir)
 
         groups = None
