@@ -66,7 +66,7 @@ def get_tess_data(star_id, cache_dir=None):
         List of FITS primary headers (hdul[0].header).
     """
     return get_mast_lightcurve(
-        starid,
+        star_id,
         mission='TESS',
         cadence=120,
         author='SPOC',
@@ -74,7 +74,7 @@ def get_tess_data(star_id, cache_dir=None):
     )
 
     
-def fast_get_mast_lightcurve(starid, mission='TESS', cadence=120, author='SPOC', cache_dir=None):
+def fast_get_mast_lightcurve(star_id, mission='TESS', cadence=120, author='SPOC', cache_dir=None):
     """
     Download MAST light curves via Lightkurve for a given star.
 
@@ -82,7 +82,7 @@ def fast_get_mast_lightcurve(starid, mission='TESS', cadence=120, author='SPOC',
 
     Parameters
     ----------
-    starid : str
+    star_id : str
         SIMBAD-resolvable target identifier.
     mission : str, optional
         Observatory mission name (e.g., 'TESS', 'Kepler', 'K2'). Default is 'TESS'.
@@ -109,14 +109,14 @@ def fast_get_mast_lightcurve(starid, mission='TESS', cadence=120, author='SPOC',
     # Check if TESS data were already downloaded.
     lcfiles = []
     if mission == 'TESS' and author == 'SPOC' and cadence == 120:
-        ticid = NAME_TO_TICID.get(starid, None)
+        ticid = NAME_TO_TICID.get(star_id, None)
         if ticid is None:
             pass
         else:
             lcfiles = np.sort(glob(join(cache_dir, 'mastDownload', 'TESS', f'tess*{ticid}*', f'tess*{ticid}*.fits')))
 
     elif mission == 'Kepler' and author == 'Kepler' and cadence == 1800:
-        kicid = NAME_TO_KICID.get(starid, None)
+        kicid = NAME_TO_KICID.get(star_id, None)
         if kicid is None:
             pass
         else:
@@ -125,7 +125,7 @@ def fast_get_mast_lightcurve(starid, mission='TESS', cadence=120, author='SPOC',
         
     if len(lcfiles) == 0:
         search_result = lk.search_lightcurve(
-            starid,
+            star_id,
             mission=mission,
             cadence=cadence,
             author=author
@@ -148,7 +148,7 @@ def fast_get_mast_lightcurve(starid, mission='TESS', cadence=120, author='SPOC',
 
     return data, hdrs
 
-def get_mast_lightcurve(starid, mission='TESS', cadence=120, author='SPOC', cache_dir=None):
+def get_mast_lightcurve(star_id, mission='TESS', cadence=120, author='SPOC', cache_dir=None):
     """
     Download MAST light curves via Lightkurve for a given star.
 
@@ -156,7 +156,7 @@ def get_mast_lightcurve(starid, mission='TESS', cadence=120, author='SPOC', cach
 
     Parameters
     ----------
-    starid : str
+    star_id : str
         SIMBAD-resolvable target identifier.
     mission : str, optional
         Observatory mission name (e.g., 'TESS', 'Kepler', 'K2'). Default is 'TESS'.
@@ -182,7 +182,7 @@ def get_mast_lightcurve(starid, mission='TESS', cadence=120, author='SPOC', cach
 
     # Search for data with specified mission, cadence, and author
     search_result = lk.search_lightcurve(
-        starid,
+        star_id,
         mission=mission,
         cadence=cadence,
         author=author
