@@ -15,7 +15,7 @@ ConfigParser pipeline management:
 ## LOGGING ##
 #############
 import logging
-from trp import log_sub, log_fmt, log_date_fmt
+from pbls import log_sub, log_fmt, log_date_fmt
 
 DEBUG = False
 if DEBUG:
