@@ -29,9 +29,8 @@ LOGEXCEPTION = LOGGER.exception
 #############
 import os, pickle
 from os.path import join
-from glob import glob
 import time as timemodule
-import numpy as np, pandas as pd
+import numpy as np
 
 from pbls.paths import CACHEDIR
 from pbls.getters import get_local_lightcurve

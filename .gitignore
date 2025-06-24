@@ -17,3 +17,4 @@ art/*
 *_arxiv_*
 .vscode*
 *joblist
+*.tar.gz
