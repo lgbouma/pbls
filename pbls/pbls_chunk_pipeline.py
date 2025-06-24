@@ -33,7 +33,7 @@ import time as timemodule
 import numpy as np
 
 from pbls.paths import CACHEDIR
-from pbls.getters import get_local_lightcurve
+from pbls.getters import get_OSG_local_lightcurve
 from pbls.lc_processing import preprocess_lightcurve
 from pbls.period_grids import generate_uniformfreq_period_grid
 
