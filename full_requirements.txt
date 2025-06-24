@@ -1,13 +1,11 @@
-# core pbls
-numpy==1.24.3
-numba==0.60.0
-
-# preprocessing
-wotan==1.10
+# core pbls and pre-processing
 astropy==5.3.4
+numpy==1.22
+numba==0.60.0
+wotan==1.10
 
-# optional extras (for viz and certain tests)
-# note: installing takes ~1 minute; rather costly
+# # optional extras (for viz and certain tests)
+# # note: installing takes ~1 minute; rather costly
 pytest==8.3.2
 lightkurve==2.4.2
 aesthetic==0.7
