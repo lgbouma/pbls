@@ -11,6 +11,8 @@ import lightkurve as lk
 from os.path import join
 import numpy as np
 
+from pbls.pipeline_utils import extract_tarball
+
 # hard cache for common cases
 NAME_TO_TICID = {
     'HIP 67522': '166527623',
@@ -26,13 +28,32 @@ NAME_TO_KICID = {
     'Kepler-1975': '8873450',
 }
 
-def get_tess_data(starid, cache_dir=None):
+def get_OSG_local_lightcurve(star_id):
+
+    # Pre-tarred light curves are passed as tarball via HTCondor.
+    tarballpath = f"./{star_id}.tar.gz"
+    extractpath = "./"
+    extract_tarball(tarballpath, extractpath)
+
+    # Read data and headers
+    lcfiles = np.sort(glob(f"{star_id}*.fits"))
+    data = []
+    hdrs = []
+    for f in lcfiles:
+        hdul = fits.open(f)
+        data.append(hdul[1].data)
+        hdrs.append(hdul[0].header)
+
+    return data, hdrs
+
+
+def get_tess_data(star_id, cache_dir=None):
     """
     Download TESS SPOC 120-second cadence light curves for a given star.
 
     Parameters
     ----------
-    starid : str
+    star_id : str
         SIMBAD-resolvable target identifier.
     cache_dir : str, optional
         Directory to cache downloaded FITS files. If None, default download_dir is used.
