@@ -9,7 +9,7 @@ cd $HOME/environments/ ;
 # NOTE: one dependency is not included in this auto-updated: the
 # complexrotators package, https://github.com/lgbouma/cpv, because I have not
 # put it on pip yet.
-pip3 install --target=$HOME/environments/py311 -r requirements.txt ;
+pip3 install --target=$HOME/environments/py311 -r core_requirements.txt ;
 pip3 install --target=$HOME/environments/py311 --upgrade pbls-0.0.0.tar.gz ;
 rm pbls-0.0.0.tar.gz ;
 
