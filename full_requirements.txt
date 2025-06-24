@@ -1,7 +1,7 @@
 # core pbls and pre-processing
-astropy==5.3.4
-numpy==1.22
-numba==0.60.0
+astropy==5.2.2
+numpy==1.20.3
+numba==0.55.0
 wotan==1.10
 
 # # optional extras (for viz and certain tests)
