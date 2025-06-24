@@ -1,0 +1,40 @@
+#
+# Condor submit script to run PBLS on the OSG.  The job, "exec_pipeline.sh", is
+# executed in units of chunks of one star's full periodogram.  The instruction
+# for the specific subset is transfered as an argument, and the pre-packaged
+# light curve as a tarball.  The environment on which the pipeline is run is
+# transferred as its own tarball as well.  Output is returned as tarballs to
+# $DATA/pbls_results.
+#
+# Usage:
+#  TODO TODO TODO NO AUTO IMPLEMENTATION, YET
+#  Auto: Run `./bigjobsubmitter.sh 0 200` (chunks from 0 to 200pc)
+#  TODO TODO TODO NO AUTO IMPLEMENTATION, YET
+#
+#  Manual: Run `condor_submit condor_submit.sub`.
+#  
+# NOTE: `condor_submit "volumeslice=0to5" condor_submit.sub` is value to assign variable "volumeslice" to some string.  Can use...
+#
+universe    = vanilla
++SingularityImage = "/cvmfs/singularity.opensciencegrid.org/opensciencegrid/osgvo-ubuntu-20.04:latest"
+
+executable  = exec_pipeline.sh
+arguments = $(star_id) $(period_chunk_ix) $(N_total_chunks)
+
+transfer_input_files = run_pbls_chunk.py, py311.tar.gz, /ospool/ap21/data/ekul/Kepler/$(star_id).tar.gz
+
+should_transfer_files   = Yes
+when_to_transfer_output = ON_EXIT
+transfer_output_remaps  = "joboutput_$(star_id)_$(period_chunk_ix)_$(N_total_chunks).tar.gz=/ospool/ap21/data/ekul/pbls_results/joboutput_$(star_id)_$(period_chunk_ix)_$(N_total_chunks).tar.gz"
+
+log           = logs/job_$(star_id)_$(period_chunk_ix)_$(Cluster)_$(Process).log
+error         = logs/job_$(star_id)_$(period_chunk_ix)_$(Cluster)_$(Process).err
+output        = logs/job_$(star_id)_$(period_chunk_ix)_$(Cluster)_$(Process).out
+
++JobDurationCategory = "Medium"
+
+request_cpus    = 1 
+request_memory  = 2GB
+request_disk    = 2GB
+
+queue star_id,period_chunk_ix,N_total_chunks from debug_jobs.joblist
