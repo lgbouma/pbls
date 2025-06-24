@@ -17,7 +17,6 @@ generate_Jenkins2010_period_grid:
     between proposed transit signals.  Implementing this in a periodogram
     requires durations to be the outermost loop.
 """
-from astropy import units as u
 import numpy as np
 
 def generate_uniformfreq_period_grid(

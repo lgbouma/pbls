@@ -41,10 +41,7 @@ LOGEXCEPTION = LOGGER.exception
 ## IMPORTS ##
 #############
 import os, tarfile
-from os.path import join
-from glob import glob
 import configparser
-import numpy as np, pandas as pd
 
 def create_tarball(fullpaths, tarball_path):
     """

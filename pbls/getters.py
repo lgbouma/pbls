@@ -7,7 +7,6 @@ get_tess_data: thin wrapper for TESS SPOC 120-second cadence light curves.
 import os
 from glob import glob
 from astropy.io import fits
-import lightkurve as lk
 from os.path import join
 import numpy as np
 
@@ -101,6 +100,8 @@ def fast_get_mast_lightcurve(star_id, mission='TESS', cadence=120, author='SPOC'
         List of FITS primary headers (hdul[0].header).
     """
 
+    import lightkurve as lk
+
     assert isinstance(cache_dir, str)
     # Ensure cache directory exists if provided
     if cache_dir:
@@ -174,6 +175,8 @@ def get_mast_lightcurve(star_id, mission='TESS', cadence=120, author='SPOC', cac
     hdrs : list
         List of FITS primary headers (hdul[0].header).
     """
+
+    import lightkurve as lk
 
     assert isinstance(cache_dir, str)
     # Ensure cache directory exists if provided
