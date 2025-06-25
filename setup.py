@@ -29,20 +29,20 @@ def readme():
     with open('README.md') as f:
         return f.read()
 
-INSTALL_REQUIRES = [
-    'numpy',
-    'scipy',
-    'astropy',
-    'matplotlib',
-]
+#INSTALL_REQUIRES = [
+#]
 
-EXTRAS_REQUIRE = {
-    'all':[
-        'cdips',
-        'gyrointerp',
-        'aesthetic'
-    ]
-}
+#EXTRAS_REQUIRE = {
+#    'all':[
+#        'numpy',
+#        'scipy',
+#        'astropy',
+#        'matplotlib',
+#        'cdips',
+#        'gyrointerp',
+#        'aesthetic'
+#    ]
+#}
 
 ###############
 ## RUN SETUP ##
@@ -74,8 +74,6 @@ setup(
     packages=[
         'pbls',
     ],
-    install_requires=INSTALL_REQUIRES,
-    extras_require=EXTRAS_REQUIRE,
     tests_require=['pytest',],
     cmdclass={'test':PyTest},
     include_package_data=True,
