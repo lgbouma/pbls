@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # Unpack the envvironment (with the pbls package), and activate it
-tar -xzf py311.tar.gz
-export PYTHONPATH=$PWD/py311
+echo 'hi'
 
 # Run the main Python script; called as run_pbls.py <star_id> <periodgrid_chunk_id> <N_total_chunks>.
 python3 run_pbls_chunk.py $1 $2 $3

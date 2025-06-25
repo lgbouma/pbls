@@ -22,7 +22,7 @@ universe    = vanilla
 executable  = exec_pipeline.sh
 arguments = $(star_id) $(period_chunk_ix) $(N_total_chunks)
 
-transfer_input_files = run_pbls_chunk.py, py311.tar.gz, /ospool/ap21/data/ekul/Kepler/$(star_id).tar.gz
+transfer_input_files = run_pbls_chunk.py, /ospool/ap21/data/ekul/Kepler/$(star_id).tar.gz
 
 should_transfer_files   = Yes
 when_to_transfer_output = ON_EXIT
