@@ -36,6 +36,8 @@ from pbls.paths import CACHEDIR
 from pbls.getters import get_OSG_local_lightcurve
 from pbls.lc_processing import preprocess_lightcurve
 from pbls.period_grids import generate_uniformfreq_period_grid
+from pbls.pbls import pbls_search
+from pbls.mp_pbls import fast_pbls_search
 
 def run_pbls_chunk(star_id, period_grid_chunk_ix, N_total_chunks):
 
