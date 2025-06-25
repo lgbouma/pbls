@@ -6,11 +6,40 @@ Contents:
 * get_LS_Prot: Measure rotation period via Lomb-Scargle peak given time and flux.
 * time_bin_lightcurve: Bin the light curve in time with a fixed binsize.
 """
+#############
+## LOGGING ##
+#############
+import logging
+from pbls import log_sub, log_fmt, log_date_fmt
+
+DEBUG = False
+if DEBUG:
+    level = logging.DEBUG
+else:
+    level = logging.INFO
+LOGGER = logging.getLogger(__name__)
+logging.basicConfig(
+    level=level,
+    style=log_sub,
+    format=log_fmt,
+    datefmt=log_date_fmt,
+    force=True
+)
+
+LOGDEBUG = LOGGER.debug
+LOGINFO = LOGGER.info
+LOGWARNING = LOGGER.warning
+LOGERROR = LOGGER.error
+LOGEXCEPTION = LOGGER.exception
+
+#############
+## IMPORTS ##
+#############
 import numpy as np
 from astropy.timeseries import LombScargle
 from wotan import slide_clip
 
-def get_LS_Prot(time, flux, Prot_min=0.1, Prot_max=15., N_freq = 1_000_000):
+def get_LS_Prot(time, flux, Prot_min=0.1, Prot_max=15., N_freq = 1_000_000, verbose=1):
     """measure rotation period (via Lomb Scargle peak) from the light curve"""
     ls = LombScargle(time, flux)
     
@@ -21,7 +50,8 @@ def get_LS_Prot(time, flux, Prot_min=0.1, Prot_max=15., N_freq = 1_000_000):
     power_ls = ls.power(frequency)
     best_freq = frequency[np.argmax(power_ls)]
     LS_Prot = 1.0 / best_freq
-    print(f"Measured LS period: {LS_Prot:.4f} days")
+    if verbose:
+        LOGINFO(f"Measured LS period: {LS_Prot:.4f} days")
 
     return LS_Prot
 
