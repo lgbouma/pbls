@@ -13,7 +13,8 @@ from pbls.pbls_chunk_pipeline import run_pbls_chunk
 
 def main():
     star_id = sys.argv[1]
-    period_grid_chunk_ix = sys.argv[2]
+    period_grid_chunk_ix = int(sys.argv[2])
+    N_total_chunks = int(sys.argv[3])
     run_pbls_chunk(star_id, period_grid_chunk_ix, N_total_chunks)
 
 if __name__ == "__main__":
