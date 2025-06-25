@@ -1,0 +1,28 @@
+# Built following https://portal.osg-htc.org/documentation/software_examples/python/manage-python-packages/
+# Build with `apptainer build python_311.sif python_311.def`
+# Test with `apptainer shell python_311.sif`, and launch python.
+
+BootStrap: docker
+From: python:3.11
+
+%files
+    /home/ekul/proj/pbls  /opt/pbls
+
+%post
+    # Update the system package index
+    apt-get update
+    
+    # Install pip if its not already included
+    apt-get install -y python3-pip
+    
+    # Upgrade pip
+    pip3 install --upgrade pip
+    
+    # Install external packages
+    pip3 install numpy==2.2.6
+    pip3 install astropy==7.1.0
+    pip3 install numba==0.61.2
+    pip3 install wotan==1.10
+    
+    # Install pbls
+    pip3 install /opt/pbls

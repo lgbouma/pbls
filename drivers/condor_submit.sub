@@ -16,7 +16,8 @@
 # NOTE: `condor_submit "volumeslice=0to5" condor_submit.sub` is value to assign variable "volumeslice" to some string.  Can use...
 #
 universe    = vanilla
-+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/opensciencegrid/osgvo-ubuntu-20.04:latest"
+
++SingularityImage = "osdf:///ospool/ap21/data/ekul/python_311.sif"
 
 executable  = exec_pipeline.sh
 arguments = $(star_id) $(period_chunk_ix) $(N_total_chunks)

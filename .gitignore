@@ -18,3 +18,4 @@ art/*
 .vscode*
 *joblist
 *.tar.gz
+*.sif
