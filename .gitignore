@@ -19,3 +19,4 @@ art/*
 *joblist
 *.tar.gz
 *.sif
+*fits
