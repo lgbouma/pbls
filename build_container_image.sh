@@ -1,16 +1,31 @@
 #!/bin/bash
 # Build the Apptainer container image for Python 3.11.
+# Name it with a short random hash because OSG's auto-caching of container
+# images results in version conflicts when jobs are run across the grid.
+# Auto-updates `condor_submit.sub` with the new hash.
 
-if [ -f python_311.sif ]; then
-    rm python_311.sif
-fi
+# Generate a 6-character hex hash
+HASH=$(openssl rand -hex 3)
+SIF_NAME="python_311_${HASH}.sif"
 
-apptainer build python_311.sif python_311.def
+# Clean up any previous images matching the pattern
+rm -f python_311_*.sif "$DATA"/python_311_*.sif
 
-if [ -f python_311.sif ]; then
-    cp python_311.sif $DATA/.
-fi
+# Build and copy
+apptainer build "${SIF_NAME}" python_311.def
+cp "${SIF_NAME}" "$DATA/."
 
-echo ""
-echo "Python 3.11 container image built and copied to $DATA."
-echo ""
+# Update +SingularityImage line in condor_submit.sub
+#    make a backup in condor_submit.sub.bak
+sed -i.bak -E \
+  "s#\+SingularityImage = \".*\"#\+SingularityImage = \"osdf:///ospool/ap21/data/ekul/${SIF_NAME}\"#" \
+  condor_submit.sub
+
+echo
+echo "Built ${SIF_NAME}, copied to \$DATA/, and updated condor_submit.sub."
+echo "Backup of original at condor_submit.sub.bak"
+echo
+
+echo
+echo "Python 3.11 container image ${SIF_NAME} built and copied to $DATA."
+echo
