@@ -83,10 +83,11 @@ def run_pbls_chunk(star_id, period_grid_chunk_ix, N_total_chunks):
     LOGINFO(f"  Cadence: {cadence*24*60:.1f} minutes")
     
     # Run PBLS and cache result to a pickle file.
+    # Don't use fast_pbls_search because on OSG we're using single cores per job.
     LOGINFO('Starting PBLS search...')
     start_time = timemodule.time()
-    result = fast_pbls_search(time, flux, this_chunk_periods, durations_hr, poly_order=poly_order)
-    #result = pbls_search(time, flux, this_chunk_periods, durations_hr, poly_order=poly_order)
+    #result = fast_pbls_search(time, flux, this_chunk_periods, durations_hr, poly_order=poly_order)
+    result = pbls_search(time, flux, this_chunk_periods, durations_hr, poly_order=poly_order)
     elapsed_time = timemodule.time() - start_time
     LOGINFO(f"  PBLS search took {elapsed_time:.3f} seconds")
 
