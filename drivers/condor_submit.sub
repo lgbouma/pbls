@@ -17,7 +17,7 @@
 #
 universe    = vanilla
 
-+SingularityImage = "osdf:///ospool/ap21/data/ekul/python_311.sif"
++SingularityImage = "osdf:///ospool/ap21/data/ekul/python_311_pbls.sif"
 
 executable  = exec_pipeline.sh
 arguments = $(star_id) $(period_chunk_ix) $(N_total_chunks)
@@ -26,11 +26,11 @@ transfer_input_files = run_pbls_chunk.py, /ospool/ap21/data/ekul/Kepler/$(star_i
 
 should_transfer_files   = Yes
 when_to_transfer_output = ON_EXIT
-transfer_output_remaps  = "joboutput_$(star_id)_$(period_chunk_ix)_$(N_total_chunks).tar.gz=/ospool/ap21/data/ekul/pbls_results/joboutput_$(star_id)_$(period_chunk_ix)_$(N_total_chunks).tar.gz"
+transfer_output_remaps  = "joboutput_$(star_id)_$(period_chunk_ix)_$(N_total_chunks).tar.gz=/ospool/ap21/data/ekul/pbls_results/$(star_id)/joboutput_$(star_id)_$(period_chunk_ix)_$(N_total_chunks).tar.gz"
 
-log           = logs/job_$(star_id)_$(period_chunk_ix)_$(Cluster)_$(Process).log
-error         = logs/job_$(star_id)_$(period_chunk_ix)_$(Cluster)_$(Process).err
-output        = logs/job_$(star_id)_$(period_chunk_ix)_$(Cluster)_$(Process).out
+log           = logs/$(star_id)/job_$(star_id)_$(period_chunk_ix)_$(Cluster)_$(Process).log
+error         = logs/$(star_id)/job_$(star_id)_$(period_chunk_ix)_$(Cluster)_$(Process).err
+output        = logs/$(star_id)/job_$(star_id)_$(period_chunk_ix)_$(Cluster)_$(Process).out
 
 +JobDurationCategory = "Medium"
 
