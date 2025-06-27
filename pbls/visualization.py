@@ -26,14 +26,15 @@ def plot_raw_light_curve(ax, time, flux):
     ax.set_ylabel("Flux")
     ax.set_title("Raw Light Curve")
 
-def plot_periodogram(ax, periods, power):
+def plot_periodogram(ax, periods, power, title=None):
     """
     Plot the periodogram on the provided Axes.
     """
     ax.plot(periods, power, c='k', lw=0.5)
     ax.set_xlabel("Trial Period (days)")
     ax.set_ylabel("Detection Statistic")
-    ax.set_title("pbls_search Periodogram")
+    if title is not None:
+        ax.set_title(title)
 
 def plot_best_model(ax, best_model):
     """

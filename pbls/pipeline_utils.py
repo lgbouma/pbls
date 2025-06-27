@@ -56,13 +56,14 @@ def create_tarball(fullpaths, tarball_path):
     LOGINFO(f"...Made {tarball_path}")
 
 
-def extract_tarball(tarball_name, extract_path):
+def extract_tarball(tarball_name, extract_path, verbose=1):
     """
     Unzip a gzipped tar archive.
     """
     with tarfile.open(tarball_name, "r:gz") as tar:
         tar.extractall(path=extract_path)
-        LOGINFO(f"Extracted {tarball_name} to {extract_path}")
+        if verbose:
+            LOGINFO(f"Extracted {tarball_name} to {extract_path}")
 
 
 def save_status(status_file, section, state_vars):
