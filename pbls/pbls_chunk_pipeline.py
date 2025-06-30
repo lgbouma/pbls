@@ -27,17 +27,23 @@ LOGEXCEPTION = LOGGER.exception
 #############
 ## IMPORTS ##
 #############
-import os, pickle
+import os, pickle, socket
 from os.path import join
 import time as timemodule
 import numpy as np
 
-from pbls.paths import CACHEDIR
+from pbls.paths import CACHEDIR, DATADIR
 from pbls.getters import get_OSG_local_lightcurve
 from pbls.lc_processing import preprocess_lightcurve
 from pbls.period_grids import generate_uniformfreq_period_grid
 from pbls.pbls import pbls_search
 from pbls.mp_pbls import fast_pbls_search
+
+mission_dtype = {
+    'TESS': ['SPOC', 120],
+    'K2': ['EVEREST', 1800],
+    'Kepler': ['Kepler', 1800],
+}
 
 def run_pbls_chunk(star_id, period_grid_chunk_ix, N_total_chunks):
 
@@ -50,15 +56,27 @@ def run_pbls_chunk(star_id, period_grid_chunk_ix, N_total_chunks):
     LOGINFO(42*'-')
     LOGINFO(f"Starting {star_id}...")
 
-    if 'kplr' in star_id:
+    if 'kplr' in star_id or 'Kepler-' in star_id:
         mission = 'Kepler'
-    elif 'tess' in star_id:
+    elif 'tess' in star_id or 'TOI-' in star_id:
         mission = 'TESS'
-    elif '_k2_' in star_id:
+    elif '_k2_' in star_id or 'K2-' in star_id:
         mission = 'K2'
+    author = mission_dtype[mission][0]
+    cadence = mission_dtype[mission][1]
 
     # Get light curve data for this target and preprocess it.
-    datas, hdrs = get_OSG_local_lightcurve(star_id)
+    hostname = socket.gethostname()
+    if hostname in ['wh1', 'wh2', 'wh3']:
+        from pbls.getters import fast_get_mast_lightcurve
+        cache_dir = join(DATADIR, 'cache')
+        os.makedirs(cache_dir, exist_ok=True)
+        datas, hdrs = fast_get_mast_lightcurve(
+            star_id, mission=mission, cadence=cadence,
+            author=author, cache_dir=cache_dir)
+    else:
+        datas, hdrs = get_OSG_local_lightcurve(star_id)
+
     N_lcfiles = len(datas)
     LOGINFO(f"{star_id}: {N_lcfiles} light curves found.")
     time, flux = preprocess_lightcurve(datas, hdrs, mission)
