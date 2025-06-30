@@ -48,7 +48,8 @@ mission_dtype = {
 def run_pbls_chunk(star_id, period_grid_chunk_ix, N_total_chunks):
 
     poly_order = 3
-    durations_hr = np.array([1, 2, 3, 4, 6])
+    #durations_hr = np.array([1, 2, 3, 4, 6])
+    durations_hr = np.array([1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6])
     period_min = 2.0
     clamp_period_max = 50.0
     oversample = 1
@@ -89,6 +90,8 @@ def run_pbls_chunk(star_id, period_grid_chunk_ix, N_total_chunks):
         period_min=period_min, clamp_period_max=clamp_period_max
     )
 
+    # assign base+1 periods to chunks i={0...rem-1}
+    # and assign base periods to chunks i={rem...C-1}
     N = len(periods)
     C = N_total_chunks
     base = N // C # int floor of N/C
