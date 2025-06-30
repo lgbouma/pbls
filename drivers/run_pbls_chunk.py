@@ -4,8 +4,9 @@ See docstring for pbls_pipeline.run_pbls for verbose explanation.
 
 Examples:
 ```
-python run_pbls.py "kplr006184894" 42 5000 # Kepler-1627, chunk 5000 times, do 42nd chunk
-python run_pbls.py "AU_Mic" 42 100 # Ditto, for AU Mic
+python run_pbls_chunk.py "kplr006184894" 42 5000 # Kepler-1627, chunk 5000 times, do 42nd chunk
+python run_pbls_chunk.py "TOI-837" 42 1000 # Ditto, for TOI-837
+python run_pbls_chunk.py "AU_Mic" 42 100 # Ditto, for AU Mic
 ```
 """
 import sys
