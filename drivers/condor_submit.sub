@@ -7,17 +7,15 @@
 # $DATA/pbls_results.
 #
 # Usage:
-#  TODO TODO TODO NO AUTO IMPLEMENTATION, YET
-#  Auto: Run `./bigjobsubmitter.sh 0 200` (chunks from 0 to 200pc)
-#  TODO TODO TODO NO AUTO IMPLEMENTATION, YET
-#
-#  Manual: Run `condor_submit condor_submit.sub`.
-#  
-# NOTE: `condor_submit "volumeslice=0to5" condor_submit.sub` is value to assign variable "volumeslice" to some string.  Can use...
+#  ```[bash]
+#  cd ../
+#  ./build_the_container_image.sh
+#  condor_submit condor_submit.sub
+#  ```
 #
 universe    = vanilla
 
-+SingularityImage = "osdf:///ospool/ap21/data/ekul/python_311_pbls.sif"
++SingularityImage = "osdf:///ospool/ap21/data/ekul/python_311_76664f.sif"
 
 executable  = exec_pipeline.sh
 arguments = $(star_id) $(period_chunk_ix) $(N_total_chunks)

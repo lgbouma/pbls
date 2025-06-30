@@ -19,7 +19,7 @@ cp "${SIF_NAME}" "$DATA/."
 #    make a backup in condor_submit.sub.bak
 sed -i.bak -E \
   "s#\+SingularityImage = \".*\"#\+SingularityImage = \"osdf:///ospool/ap21/data/ekul/${SIF_NAME}\"#" \
-  condor_submit.sub
+  drivers/condor_submit.sub
 
 echo
 echo "Built ${SIF_NAME}, copied to \$DATA/, and updated condor_submit.sub."
