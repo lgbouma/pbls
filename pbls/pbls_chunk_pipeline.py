@@ -88,10 +88,17 @@ def run_pbls_chunk(star_id, period_grid_chunk_ix, N_total_chunks):
         total_time, cadence, oversample=oversample,
         period_min=period_min, clamp_period_max=clamp_period_max
     )
-    N_periods = len(periods)
-    periods_per_chunk = int(np.ceil(N_periods/N_total_chunks))
-    this_slice = slice(period_grid_chunk_ix*periods_per_chunk,
-                       (period_grid_chunk_ix+1)*periods_per_chunk)
+
+    N = len(periods)
+    C = N_total_chunks
+    base = N // C # int floor of N/C
+    rem = N % C   # remainder
+    i = period_grid_chunk_ix
+    # start index for chunk i:
+    start = i * base + min(i, rem)
+    # number of periods for chunk i:
+    count = base + (1 if i < rem else 0)
+    this_slice = slice(start, start + count)
     this_chunk_periods = periods[this_slice]
 
     LOGINFO(f"  Data points: {len(time)}")
