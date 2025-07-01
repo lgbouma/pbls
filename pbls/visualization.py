@@ -15,7 +15,6 @@ Small helper functions:
 """
 import matplotlib.pyplot as plt
 import numpy as np
-from aesthetic.plot import set_style
 
 def plot_raw_light_curve(ax, time, flux):
     """
@@ -172,6 +171,7 @@ def plot_summary_figure(time, flux, periods, power, best_params, best_model, pos
                  DDGGEEFF
                  """.strip()
         
+    from aesthetic.plot import set_style
     set_style("science")
 
     fig, axd = plt.subplot_mosaic(mosaic, figsize=(14, 10))
