@@ -20,3 +20,4 @@ art/*
 *.tar.gz
 *.sif
 *fits
+*.bak

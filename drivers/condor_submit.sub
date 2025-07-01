@@ -10,12 +10,13 @@
 #  ```[bash]
 #  cd ../
 #  ./build_the_container_image.sh
+#  python clean_directories.py
 #  condor_submit condor_submit.sub
 #  ```
 #
 universe    = vanilla
 
-+SingularityImage = "osdf:///ospool/ap21/data/ekul/python_311_76664f.sif"
++SingularityImage = "osdf:///ospool/ap21/data/ekul/python_311_a330c1.sif"
 
 executable  = exec_pipeline.sh
 arguments = $(star_id) $(period_chunk_ix) $(N_total_chunks)
@@ -34,6 +35,6 @@ output        = logs/$(star_id)/job_$(star_id)_$(period_chunk_ix)_$(Cluster)_$(P
 
 request_cpus    = 1 
 request_memory  = 2GB
-request_disk    = 2GB
+request_disk    = 4GB
 
 queue star_id,period_chunk_ix,N_total_chunks from debug_jobs.joblist
