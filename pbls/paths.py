@@ -9,7 +9,7 @@ CACHEDIR = join(os.path.expanduser("~"), ".pbls_cache")
 if not os.path.exists(CACHEDIR): os.mkdir(CACHEDIR)
 
 hostname = socket.gethostname()
-if 'osg' not in hostname:
+if hostname in ['wh1', 'wh2', 'wh3']:
     DATADIR = join(__path__[0], 'data')
     RESULTSDIR = join(os.path.dirname(__path__[0]), 'results')
     TESTRESULTSDIR = join(RESULTSDIR, 'tests')
