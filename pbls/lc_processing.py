@@ -5,6 +5,7 @@ Contents:
 * preprocess_lightcurve: Standard cleaning before PBLS.
 * get_LS_Prot: Measure rotation period via Lomb-Scargle peak given time and flux.
 * time_bin_lightcurve: Bin the light curve in time with a fixed binsize.
+* transit_mask: Get transit mask given t, P, Tdur, t0
 """
 #############
 ## LOGGING ##
@@ -35,6 +36,7 @@ LOGEXCEPTION = LOGGER.exception
 #############
 ## IMPORTS ##
 #############
+import socket, pickle
 import numpy as np
 from astropy.timeseries import LombScargle
 from wotan import slide_clip
@@ -54,6 +56,13 @@ def get_LS_Prot(time, flux, Prot_min=0.1, Prot_max=15., N_freq = 1_000_000, verb
         LOGINFO(f"Measured LS period: {LS_Prot:.4f} days")
 
     return LS_Prot
+
+    
+def transit_mask(t, P, Tdur, t0):
+    """Create a mask for transits given time, period, transit duration, and transit epoch."""
+    mask = np.abs(  (t - t0 + 0.5*P) % P - 0.5 * P )  < 0.5 * Tdur
+    return mask
+
 
 def time_bin_lightcurve(time, flux, binsize):
     """Bin the light curve in time with a fixed binsize.
