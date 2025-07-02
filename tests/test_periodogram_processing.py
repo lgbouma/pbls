@@ -35,8 +35,7 @@ def test_periodogram_processing(Porb=3.1666, Prot=1.4, method='trimmean', poly_o
     max_key = max(np.array(list(pg_results.keys())))
     peak_period = pg_results[max_key]['peak_period']
     durations_hr = np.array([1,2,3,4])
-    epoch_steps = 50
-    res = pbls_search(time, flux, np.array([peak_period]), durations_hr, epoch_steps, poly_order)
+    res = pbls_search(time, flux, np.array([peak_period]), durations_hr, poly_order)
 
     # Extract period-level max SNR and corresponding best model params
     power0 = res['power'][0]
@@ -51,6 +50,7 @@ def test_periodogram_processing(Porb=3.1666, Prot=1.4, method='trimmean', poly_o
         f"test_pbls_search_result_pgproc{method}_Porb{Porb:.3f}_Prot{Prot:.3f}_po{poly_order:d}.png"
     )
     plt.savefig(plot_path, dpi=300, bbox_inches="tight")
+    print(f"Saved figure to {plot_path}")
     plt.close()
 
     # Animated periodogram fitting/subtraction

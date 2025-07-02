@@ -59,7 +59,9 @@ def get_LS_Prot(time, flux, Prot_min=0.1, Prot_max=15., N_freq = 1_000_000, verb
 
     
 def transit_mask(t, P, Tdur, t0):
-    """Create a mask for transits given time, period, transit duration, and transit epoch."""
+    """Create a mask for transits given time, period, transit duration, and
+    transit (midtime) epoch.  All should be passed in units of days."""
+    
     mask = np.abs(  (t - t0 + 0.5*P) % P - 0.5 * P )  < 0.5 * Tdur
     return mask
 

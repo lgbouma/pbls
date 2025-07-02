@@ -82,7 +82,7 @@ def test_pbls_search():
         # periods = np.linspace(2, 10, 3000)         # Trial periods in days
         # durations_hr = np.array([1,2,3,4]) # trial durations in units of hours
         periods = generate_uniformfreq_period_grid(
-            total_time, cadence, oversample=oversample, period_min=2.0, clamp_period_max=10.0
+            total_time, cadence, oversample=oversample, period_min=2.0, clamp_period_max=8.0
         )
         durations_hr = np.array([1,2,3,4,6])  # trial durations in units of hours
 
@@ -175,9 +175,6 @@ def test_pbls_search():
 
         test_periodogram_processing(Porb=Porb, Prot=Prot, method='trimmean', poly_order=poly_order)
         print(42*'-')
-
-        import IPython; IPython.embed()
-        #TODO TODO: LOOK AT THE BEST_COEFFS...
 
 
 if __name__ == "__main__":

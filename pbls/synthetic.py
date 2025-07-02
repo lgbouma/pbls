@@ -27,11 +27,10 @@ def generate_synthetic_light_curve(period=2.0, duration=0.1, epoch=0.3, depth=0.
     time = np.arange(0, total_time, cadence)
     flux = np.ones_like(time)
     
-    # Compute the phase for each observation
-    phase = (time % period) / period
-    
-    # Apply a transit signal: subtract depth where in transit
-    in_transit = (phase >= epoch) & (phase < (epoch + duration))
+    duration_days = duration * period
+
+    in_transit = np.abs(  (time - epoch + 0.5*period) % period - 0.5 * period )  < 0.5 * duration_days
+
     flux[in_transit] -= depth
     
     # Add Gaussian noise

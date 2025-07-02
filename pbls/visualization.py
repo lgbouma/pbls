@@ -15,6 +15,7 @@ Small helper functions:
 """
 import matplotlib.pyplot as plt
 import numpy as np
+from pbls.lc_processing import transit_mask
 
 def plot_raw_light_curve(ax, time, flux):
     """
@@ -75,11 +76,19 @@ def plot_best_model(ax, best_model):
     ax.set_title("Best-Model Raw Data")
     ax.legend()
 
-def plot_detrended_flux(ax, best_model):
+def plot_detrended_flux(ax, best_model, best_params):
     """
     Plot the detrended flux (flux_resid vs time) on the provided Axes.
     """
     ax.plot(best_model['time'], best_model['flux_resid'], 'k.', markersize=2)
+
+    t = best_model['time']
+    P = best_params['period']
+    Tdur = best_params['duration_hr'] / 24
+    t0 = best_params['epoch_days']
+    in_tra = transit_mask(t, P, Tdur, t0)
+    ax.plot(best_model['time'][in_tra], best_model['flux_resid'][in_tra], marker='.', c='red',  markersize=2, linewidth=0)
+
     ax.set_xlabel("Time (days)")
     ax.set_ylabel("Detrended Flux")
     ax.set_title("Detrended Flux (Residuals)")
@@ -94,8 +103,8 @@ def plot_phase_folded_best(ax, best_model, best_params):
     period = best_params['period']
     phase = ( (best_model['time']-t0) % period) / period
     phase[phase > 0.5] -= 1.0  # shift phase to [-0.5, 0.5]
-    phase_ingr = 0.  # let time = t0 above
-    phase_egr  = (best_params['duration_hr']/24)/period
+    phase_ingr = - 0.5 * (best_params['duration_hr']/24)/period # 0.  # let time = t0 above
+    phase_egr  = 0.5 * (best_params['duration_hr']/24)/period
 
     ax.plot(phase, best_model['flux_resid'], 'k.', markersize=2)
     ax.set_xlabel("Phase")
@@ -186,7 +195,7 @@ def plot_summary_figure(time, flux, periods, power, best_params, best_model, pos
     plot_best_model(axd['B'], best_model)
     
     # Panel D: Detrended flux (residuals)
-    plot_detrended_flux(axd['C'], best_model)
+    plot_detrended_flux(axd['C'], best_model, best_params)
 
     tmin, tmax = time.min(), time.max()
     for ax in [axd['A'], axd['B'], axd['C']]:

@@ -232,7 +232,7 @@ def pbls_search(time, flux, periods, durations_hr, poly_order=2):
                     best_snr = snr
                     best_period = trial_period
                     best_duration_hr = trial_duration * trial_period * 24.0  # convert to hours
-                    best_epoch = epoch # phase units
+                    best_epoch = epoch # phase units, technically *ingress*
                     best_epoch_days = epoch * trial_period + tmin # time units
                     best_depth = depth
                     
@@ -247,12 +247,15 @@ def pbls_search(time, flux, periods, durations_hr, poly_order=2):
         coeff_list.append(coeffs_max_snr)
     
     # Construct output dictionary with nested dictionaries
+    # Since the routine above is technically keeping track of "epoch" as the
+    # ingress time, correct this in the output to the usual convention of
+    # quoting the midtime.
     result = {
         'best_params': {
             'period': best_period,
             'duration_hr': best_duration_hr,
-            'epoch': best_epoch,
-            'epoch_days': best_epoch_days,
+            'epoch': best_epoch + 0.5 * (best_duration_hr / 24)/best_period,
+            'epoch_days': best_epoch_days + 0.5 * best_duration_hr / 24,
             'depth': best_depth,
             'snr': best_snr
         },
