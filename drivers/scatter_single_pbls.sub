@@ -1,0 +1,26 @@
+# scatter_single_pbls.sub
+#
+# Called by run_iterative_pbls.dag; star_id, iter_ix, and ntotchunks from there.
+
+universe    = vanilla
++SingularityImage = "osdf:///ospool/ap21/data/ekul/python_311_ba111f.sif"
+
+executable  = exec_pipeline.sh
+arguments = $(star_id) $(period_chunk_ix) $(ntotchunks) $(iter_ix)
+transfer_input_files = run_pbls_chunk.py, /ospool/ap21/data/ekul/Kepler/$(star_id).tar.gz
+
+should_transfer_files   = Yes
+when_to_transfer_output = ON_EXIT
+transfer_output_remaps  = "joboutput_$(star_id)_$(period_chunk_ix)_$(ntotchunks)_$(iter_ix).tar.gz=/ospool/ap21/data/ekul/pbls_results/$(star_id)/joboutput_$(star_id)_$(period_chunk_ix)_$(ntotchunks)_iter$(iter_ix).tar.gz"
+
+log           = logs/$(star_id)/iter$(iter_ix)/job_$(star_id)_$(period_chunk_ix)_$(Cluster)_$(Process).log
+error         = logs/$(star_id)/iter$(iter_ix)/job_$(star_id)_$(period_chunk_ix)_$(Cluster)_$(Process).err
+output        = logs/$(star_id)/iter$(iter_ix)/job_$(star_id)_$(period_chunk_ix)_$(Cluster)_$(Process).out
+
++JobDurationCategory = "Medium"
+
+request_cpus    = 1 
+request_memory  = 2GB
+request_disk    = 4GB
+
+queue period_chunk_ix from inds_$(ntotchunks).lst

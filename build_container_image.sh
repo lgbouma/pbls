@@ -15,15 +15,20 @@ rm -f python_311_*.sif "$DATA"/python_311_*.sif
 apptainer build "${SIF_NAME}" python_311.def
 cp "${SIF_NAME}" "$DATA/."
 
-# Update +SingularityImage line in condor_submit.sub
-#    make a backup in condor_submit.sub.bak
+# Update python environment name line in condor submission scripts and make backups.
 sed -i.bak -E \
   "s#\+SingularityImage = \".*\"#\+SingularityImage = \"osdf:///ospool/ap21/data/ekul/${SIF_NAME}\"#" \
   drivers/condor_submit.sub
+sed -i.bak -E \
+  "s#\+SingularityImage = \".*\"#\+SingularityImage = \"osdf:///ospool/ap21/data/ekul/${SIF_NAME}\"#" \
+  drivers/scatter_single_pbls.sub
+sed -i.bak -E \
+  "s#python_311_[[:alnum:]]+\.sif#${SIF_NAME}#g" \
+  drivers/mergemask.sub
 
 echo
-echo "Built ${SIF_NAME}, copied to \$DATA/, and updated condor_submit.sub."
-echo "Backup of original at condor_submit.sub.bak"
+echo "Built ${SIF_NAME}, copied to \$DATA/, and updated condor submit scripts."
+echo "Backups of originals also written."
 echo
 
 echo
