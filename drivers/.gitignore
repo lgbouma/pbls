@@ -1,0 +1,5 @@
+*.dag.condor.sub
+*.dag.lib.err
+*.dag.lock
+*.dag.metrics
+*.dag.rescue*
