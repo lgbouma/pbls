@@ -36,12 +36,12 @@ def test_fast_vs_standard_pbls_search():
 
     # --- run standard pbls_search ---
     t0 = time.perf_counter()
-    res_std = pbls_search(t, flux, periods, durations, epoch_steps=50, poly_order=2)
+    res_std = pbls_search(t, flux, periods, durations, poly_order=2)
     dt_std = time.perf_counter() - t0
 
     # --- run accelerated fast_pbls_search ---
     t1 = time.perf_counter()
-    res_fast = fast_pbls_search(t, flux, periods, durations, epoch_steps=50, poly_order=2)
+    res_fast = fast_pbls_search(t, flux, periods, durations, poly_order=2)
     dt_fast = time.perf_counter() - t1
 
     # --- report performance ---
