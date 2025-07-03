@@ -45,7 +45,7 @@ def detrend_segment(t_loc, f_loc, out_idx, poly_order):
     return mval, f_loc - mval, coeffs
 
 
-def pbls_search(time, flux, periods, durations_hr, poly_order=2):
+def pbls_search(time, flux, periods, durations_hr, poly_order=2, cache_coeffs=False):
     """
     A Box Least Squares (BLS) variant that fits and subtracts a local polynomial trend
     in the time domain around each transit event to mitigate stellar spot-induced variability.
@@ -78,6 +78,8 @@ def pbls_search(time, flux, periods, durations_hr, poly_order=2):
         Array of trial durations in units of hours.
     poly_order : int, optional
         Order of the local polynomial to be fit in time (e.g., 2 for quadratic).
+    cache_coeffs : bool, optional
+        If True, cache the polynomial coefficients for each trial period.
     
     Returns
     -------
@@ -252,24 +254,26 @@ def pbls_search(time, flux, periods, durations_hr, poly_order=2):
     # quoting the midtime.
     result = {
         'best_params': {
-            'period': best_period,
-            'duration_hr': best_duration_hr,
-            'epoch': best_epoch + 0.5 * (best_duration_hr / 24)/best_period,
-            'epoch_days': best_epoch_days + 0.5 * best_duration_hr / 24,
-            'depth': best_depth,
-            'snr': best_snr
+            'period': float(best_period),
+            'duration_hr': float(best_duration_hr),
+            'epoch': float(best_epoch + 0.5 * (best_duration_hr / 24)/best_period),
+            'epoch_days': float(best_epoch_days + 0.5 * best_duration_hr / 24),
+            'depth': float(best_depth),
+            'snr': float(best_snr)
         },
-        'power': np.array(power_list),
-        'coeffs': coeff_list,
-        'periods': periods,
+        'power': np.array(power_list).tolist(),
+        'periods': periods.tolist(),
         'best_model': {
-            'time': best_local_time,
-            'flux': best_local_flux,
-            'model_flux': best_model_flux,
-            'flux_resid': best_flux_resid,
-            'all_in_transit_flux': best_all_in_transit_flux,
-            'all_out_transit_flux': best_all_out_transit_flux,
+            'time': best_local_time.tolist(),
+            'flux': best_local_flux.tolist(),
+            'model_flux': best_model_flux.tolist(),
+            'flux_resid': best_flux_resid.tolist(),
+            'all_in_transit_flux': best_all_in_transit_flux.tolist(),
+            'all_out_transit_flux': best_all_out_transit_flux.tolist(),
         }
     }
+
+    if cache_coeffs:
+        result['coeffs'] = coeff_list,
     
     return result

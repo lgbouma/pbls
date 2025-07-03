@@ -6,7 +6,7 @@ from .pbls import pbls_search
 def _worker(args):
     time, flux, trial_period, durations_hr, poly_order = args
     # Run pbls_search for a single period
-    res = pbls_search(time, flux, np.array([trial_period]), durations_hr, poly_order)
+    res = pbls_search(time, flux, np.array([trial_period]), durations_hr, poly_order, cache_coeffs=True)
     # Extract period-level max SNR and corresponding best model params
     power0 = res['power'][0]
     coeffs = res['coeffs'][0]
