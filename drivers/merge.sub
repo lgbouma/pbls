@@ -1,0 +1,22 @@
+# mergemask.sub
+# Execute locally on the submit node.  NB. this is the default OSG system-level
+# python environment.  (Apptainer can't access the filesystem)
+# Be sure to chmod +x run_pbls_merge.py.
+#
+# Usage:
+#
+# Call through the DAG file.  Or, to debug:
+#   `condor_submit star_id=kplr006184894 iter_ix=0 threshold=8 maxiter=3 merge.sub`
+
+Universe            = local
+executable          = run_pbls_merge.py
+arguments           = $(star_id) $(iter_ix) $(threshold) $(maxiter)
+
+should_transfer_files   = YES
+when_to_transfer_output = ON_EXIT
+
+log    = logs/merge_$(star_id)_iter$(iter_ix).log
+error  = logs/merge_$(star_id)_iter$(iter_ix).err
+output = logs/merge_$(star_id)_iter$(iter_ix).out
+
+queue 1
