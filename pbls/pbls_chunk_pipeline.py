@@ -32,8 +32,8 @@ from os.path import join
 import time as timemodule
 import numpy as np
 
-from pbls.paths import CACHEDIR, DATADIR
-from pbls.getters import get_OSG_local_lightcurve
+from pbls.paths import CACHEDIR
+from pbls.getters import get_OSG_local_fits_lightcurve, get_OSG_local_csv_lightcurve
 from pbls.lc_processing import preprocess_lightcurve
 from pbls.period_grids import generate_uniformfreq_period_grid
 from pbls.pbls import pbls_search
@@ -45,7 +45,19 @@ mission_dtype = {
     'Kepler': ['Kepler', 1800],
 }
 
-def run_pbls_chunk(star_id, period_grid_chunk_ix, N_total_chunks):
+def run_pbls_chunk(star_id, period_grid_chunk_ix, N_total_chunks, iter_ix=0):
+    """
+    Run PBLS on a chunk of the period grid for a given star.
+
+    Args:
+        star_id (str): Identifier for the star, e.g., 'kplr006184894'.
+        period_grid_chunk_ix (int): Index of the chunk in the period grid.
+        N_total_chunks (int): Total number of chunks in the period grid.
+        iter_ix (int): PBLS iteration number, default is 0; increment by DAG job.
+
+    Returns:
+        None: The results are saved to a pickle file in paths.CACHEDIR.
+    """
 
     poly_order = 3
     #durations_hr = np.array([1, 2, 3, 4, 6])
@@ -66,21 +78,27 @@ def run_pbls_chunk(star_id, period_grid_chunk_ix, N_total_chunks):
     author = mission_dtype[mission][0]
     cadence = mission_dtype[mission][1]
 
-    # Get light curve data for this target and preprocess it.
-    hostname = socket.gethostname()
-    if hostname in ['wh1', 'wh2', 'wh3']:
-        from pbls.getters import fast_get_mast_lightcurve
-        cache_dir = join(DATADIR, 'cache')
-        os.makedirs(cache_dir, exist_ok=True)
-        datas, hdrs = fast_get_mast_lightcurve(
-            star_id, mission=mission, cadence=cadence,
-            author=author, cache_dir=cache_dir)
-    else:
-        datas, hdrs = get_OSG_local_lightcurve(star_id)
+    if iter_ix == 0:
+        # Get light curve data for this target and preprocess it.
+        hostname = socket.gethostname()
+        if hostname in ['wh1', 'wh2', 'wh3']:
+            from pbls.getters import fast_get_mast_lightcurve
+            from pbls.paths import DATADIR
+            cache_dir = join(DATADIR, 'cache')
+            os.makedirs(cache_dir, exist_ok=True)
+            datas, hdrs = fast_get_mast_lightcurve(
+                star_id, mission=mission, cadence=cadence,
+                author=author, cache_dir=cache_dir)
+        else:
+            datas, hdrs = get_OSG_local_fits_lightcurve(star_id)
 
-    N_lcfiles = len(datas)
-    LOGINFO(f"{star_id}: {N_lcfiles} light curves found.")
-    time, flux = preprocess_lightcurve(datas, hdrs, mission)
+        N_lcfiles = len(datas)
+        LOGINFO(f"{star_id}: {N_lcfiles} light curves found.")
+        time, flux = preprocess_lightcurve(datas, hdrs, mission)
+    else:
+        # Further iterations: just load the cached and pre-masked light curve
+        # made by the "MergeMask" job.
+        time, flux = get_OSG_local_csv_lightcurve(star_id, iter_ix=iter_ix)
 
     # Generate period grid and chunk it.
     total_time = np.nanmax(time) - np.nanmin(time)
@@ -119,7 +137,7 @@ def run_pbls_chunk(star_id, period_grid_chunk_ix, N_total_chunks):
     elapsed_time = timemodule.time() - start_time
     LOGINFO(f"  PBLS search took {elapsed_time:.3f} seconds")
 
-    pkl_path = join(CACHEDIR, f"{star_id}_{period_grid_chunk_ix}_{N_total_chunks}.pkl")
+    pkl_path = join(CACHEDIR, f"{star_id}_{period_grid_chunk_ix}_{N_total_chunks}_iter{iter_ix}.pkl")
     with open(pkl_path, "wb") as f:
         pickle.dump(result, f)
     LOGINFO(f"Cached PBLS result at {pkl_path}")

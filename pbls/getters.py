@@ -27,7 +27,7 @@ NAME_TO_KICID = {
     'Kepler-1975': '8873450',
 }
 
-def get_OSG_local_lightcurve(star_id):
+def get_OSG_local_fits_lightcurve(star_id):
 
     # Pre-tarred light curves are passed as tarball via HTCondor.
     tarballpath = f"./{star_id}.tar.gz"
@@ -44,6 +44,20 @@ def get_OSG_local_lightcurve(star_id):
         hdrs.append(hdul[0].header)
 
     return data, hdrs
+
+    
+def get_OSG_local_csv_lightcurve(star_id, iter_ix=0):
+
+    # CSV light curves are passed via HTCondor through the DAGman.
+    csvpath = f"./{star_id}_masked_lightcurve_iter{iter_ix}.csv"
+
+    from astropy.table import Table
+
+    table = Table.read(csvpath, format='csv')
+    time = np.array(table['time_masked'])
+    flux = np.array(table['flux_masked'])
+
+    return time, flux
 
 
 def get_tess_data(star_id, cache_dir=None):

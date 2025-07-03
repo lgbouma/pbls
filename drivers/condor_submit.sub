@@ -16,7 +16,7 @@
 #
 universe    = vanilla
 
-+SingularityImage = "osdf:///ospool/ap21/data/ekul/python_311_a330c1.sif"
++SingularityImage = "osdf:///ospool/ap21/data/ekul/python_311_4b57f4.sif"
 
 executable  = exec_pipeline.sh
 arguments = $(star_id) $(period_chunk_ix) $(N_total_chunks)
@@ -35,6 +35,6 @@ output        = logs/$(star_id)/job_$(star_id)_$(period_chunk_ix)_$(Cluster)_$(P
 
 request_cpus    = 1 
 request_memory  = 2GB
-request_disk    = 4GB
+request_disk    = 10GB
 
 queue star_id,period_chunk_ix,N_total_chunks from debug_jobs.joblist
