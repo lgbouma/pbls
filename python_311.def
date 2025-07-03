@@ -24,6 +24,7 @@ From: python:3.11
     pip3 install numba==0.61.2
     pip3 install wotan==1.10
     pip3 install pandas==2.3.0
+    pip3 install matplotlib==3.10.3
     
     # Install pbls
     pip3 install /opt/pbls
