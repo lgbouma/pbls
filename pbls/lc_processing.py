@@ -41,6 +41,8 @@ import numpy as np
 from astropy.timeseries import LombScargle
 from wotan import slide_clip
 
+from pbls.getters import get_OSG_local_fits_lightcurve, get_OSG_local_csv_lightcurve
+
 def get_LS_Prot(time, flux, Prot_min=0.1, Prot_max=15., N_freq = 1_000_000, verbose=1):
     """measure rotation period (via Lomb Scargle peak) from the light curve"""
     ls = LombScargle(time, flux)
@@ -61,7 +63,7 @@ def get_LS_Prot(time, flux, Prot_min=0.1, Prot_max=15., N_freq = 1_000_000, verb
 def transit_mask(t, P, Tdur, t0):
     """Create a mask for transits given time, period, transit duration, and
     transit (midtime) epoch.  All should be passed in units of days."""
-    
+
     mask = np.abs(  (t - t0 + 0.5*P) % P - 0.5 * P )  < 0.5 * Tdur
     return mask
 
@@ -88,6 +90,7 @@ def time_bin_lightcurve(time, flux, binsize):
         binned_flux.append(np.nanmean(flux[mask]))
 
     return np.array(binned_time), np.array(binned_flux)
+
 
 def preprocess_lightcurve(datas, hdrs, mission):
     """
@@ -164,3 +167,68 @@ def preprocess_lightcurve(datas, hdrs, mission):
     flux = np.concatenate(_flux)
 
     return time, flux
+
+    
+def mask_top_pbls_peak(star_id, iter_ix=0, snr_threshold=8.0, maxiter=3):
+    """
+    (Relevant solely for iterative PBLS)
+    Read in the periodogram.
+    Take the highest-SNR peak's model, and mask in-transit points.
+    Make a CSV light curve with time, original flux, and masked flux.
+    Return the highest-SNR peak value.
+    """
+
+    hostname = socket.gethostname()
+
+    # Define directories for reading merged periodograms
+    if hostname in ['wh1', 'wh2', 'wh3']:
+        outprocessingdir = f'/ar0/PROCESSING/merged_periodograms'
+    elif 'osg' in hostname:
+        outprocessingdir = f'/ospool/ap21/data/ekul/pbls_results/PROCESSING/merged_periodograms'
+    else:
+        raise NotImplementedError
+
+    inpickle = join(outprocessingdir, f'{star_id}_merged_pbls_periodogram_iter{iter_ix}.pkl')
+    with open(inpickle, 'rb') as f:
+        result = pickle.load(f)
+
+    # Load time and flux
+    # NOTE: duplicates code from pbls/pbls_chunk_pipeline.py
+    if iter_ix == 0:
+        if hostname in ['wh1', 'wh2', 'wh3']:
+            raise NotImplementedError
+        else:
+            datas, hdrs = get_OSG_local_fits_lightcurve(star_id)
+            N_lcfiles = len(datas)
+            LOGINFO(f"{star_id}: {N_lcfiles} light curves found.")
+            time, flux = preprocess_lightcurve(datas, hdrs, mission)
+    else:
+        # Further iterations: just load the cached and pre-masked light curve
+        # made later by this function.
+        time, flux = get_OSG_local_csv_lightcurve(star_id, iter_ix=iter_ix)
+
+    # Get max power
+    power = result['power']
+    max_snr = np.nanmax(power)
+
+    # Get transit mask
+    best_params = result['best_params']
+    P = best_params['period']
+    Tdur = best_params['duration_hr'] / 24
+    t0 = best_params['epoch_days']
+    in_transit = transit_mask(time, P, Tdur, t0)
+
+    LOGINFO(f'Got P={P:.5f} d, Tdur={Tdur*24:.1f} hr, t0={t0:.4f}, SNR={max_snr:.1f}')
+    LOGINFO(f'In-transit mask: {np.sum(in_transit)} points masked out of {len(time)}')
+
+    time_masked = time[~in_transit]
+    flux_masked = flux[~in_transit]
+
+    out_df = pd.DataFrame({'time': time, 'flux_original': flux,
+                           'time_masked': time_masked, 'flux_masked': flux_masked})
+
+    out_csv = join(outprocessingdir, f'{star_id}_masked_lightcurve_iter{iter_ix}.csv')
+    out_df.to_csv(out_csv, index=False)
+    LOGINFO(f'Wrote masked light curve to {out_csv}')
+
+    return max_snr
