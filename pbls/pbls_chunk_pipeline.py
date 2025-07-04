@@ -68,6 +68,9 @@ def run_pbls_chunk(star_id, period_grid_chunk_ix, N_total_chunks, iter_ix=0):
 
     LOGINFO(42*'-')
     LOGINFO(f"Starting {star_id}...")
+    LOGINFO("  Period grid chunk index: {period_grid_chunk_ix}")
+    LOGINFO("  Total number of chunks: {N_total_chunks}")
+    LOGINFO("  Iteration index: {iter_ix}")
 
     if 'kplr' in star_id or 'Kepler-' in star_id:
         mission = 'Kepler'
@@ -95,9 +98,13 @@ def run_pbls_chunk(star_id, period_grid_chunk_ix, N_total_chunks, iter_ix=0):
         N_lcfiles = len(datas)
         LOGINFO(f"{star_id}: {N_lcfiles} light curves found.")
         time, flux = preprocess_lightcurve(datas, hdrs, mission)
+        LOGINFO(f"{star_id}: {len(time)} points found (iter_ix=0).")
     else:
         # Load the masked light curve made by mask.sub last iteration.
         time, flux = get_OSG_local_csv_lightcurve(star_id, iter_ix=iter_ix-1)
+        sel = np.isfinite(time) & np.isfinite(flux)
+        time, flux = time[sel], flux[sel]
+        LOGINFO(f"{star_id}: {len(time)} finite points found (iter_ix={iter_ix}).")
 
     # Generate period grid and chunk it.
     total_time = np.nanmax(time) - np.nanmin(time)

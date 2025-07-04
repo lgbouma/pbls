@@ -17,8 +17,7 @@ def main():
     star_id = sys.argv[1]
     period_grid_chunk_ix = int(sys.argv[2])
     N_total_chunks = int(sys.argv[3])
-    default_iter_ix = 0
-    iter_ix = int(sys.argv[4]) if len(sys.argv) > 4 else default_iter_ix
+    iter_ix = int(sys.argv[4])
 
     run_pbls_chunk(star_id, period_grid_chunk_ix, N_total_chunks, iter_ix=iter_ix)
 

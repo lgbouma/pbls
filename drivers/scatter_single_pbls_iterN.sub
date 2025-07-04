@@ -6,7 +6,7 @@
 # `condor_submit star_id=kplr006184894 ntotchunks=5000 iter_ix=1 prev_ix=0 scatter_single_pbls_iterN.sub`
 
 universe    = vanilla
-+SingularityImage = "osdf:///ospool/ap21/data/ekul/python_311_8cb041.sif"
++SingularityImage = "osdf:///ospool/ap21/data/ekul/python_311_181b21.sif"
 
 executable  = exec_pipeline.sh
 arguments = $(star_id) $(period_chunk_ix) $(ntotchunks) $(iter_ix)
