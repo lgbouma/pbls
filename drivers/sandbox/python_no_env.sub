@@ -1,0 +1,15 @@
+# Executed locally on the submit node.
+# Be sure to chmod +x python_no_env.py
+
+Universe            = local
+executable          = python_no_env.py
+arguments           = kplr123456
+
+should_transfer_files   = YES
+when_to_transfer_output = ON_EXIT
+
+log    = localpythonscript.log
+error  = localpythonscript.err
+output = localpythonscript.out
+
+queue 1

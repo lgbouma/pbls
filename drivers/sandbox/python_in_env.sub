@@ -1,0 +1,16 @@
+# Executed locally on the submit node.
+# Be sure to chmod +x run_pythonscript.sh.
+
+Universe            = local
+
+executable          = run_python_in_env.sh
+arguments           = kplr123456
+
+should_transfer_files   = YES
+when_to_transfer_output = ON_EXIT
+
+log    = localpythonscript.log
+error  = localpythonscript.err
+output = localpythonscript.out
+
+queue 1

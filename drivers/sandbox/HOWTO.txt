@@ -1,0 +1,9 @@
+condor_submit python_in_env.sub
+
+> Example of how to run a python script lcoally, in an arbitrary apptainer
+> environment, through a shell wrapped called by condor.  This is great; except
+> the image file for the environment cannot access the local file system.
+
+condor_submit python_no_env.sub
+
+> Run a python script locally using the default OSG env.
