@@ -21,7 +21,10 @@ sed -i.bak -E \
   drivers/condor_submit.sub
 sed -i.bak -E \
   "s#\+SingularityImage = \".*\"#\+SingularityImage = \"osdf:///ospool/ap21/data/ekul/${SIF_NAME}\"#" \
-  drivers/scatter_single_pbls.sub
+  drivers/scatter_single_pbls_iter0.sub
+sed -i.bak -E \
+  "s#\+SingularityImage = \".*\"#\+SingularityImage = \"osdf:///ospool/ap21/data/ekul/${SIF_NAME}\"#" \
+  drivers/scatter_single_pbls_iterN.sub
 sed -i.bak -E \
   "s#python_311_[[:alnum:]]+\.sif#${SIF_NAME}#g" \
   drivers/run_pbls_mask.sh
