@@ -5,7 +5,7 @@
 # ntotchunks: 5000 at runtime; try 4 for debugging (within scatter_single_pbls.sub).
 
 # Iteration 0
-JOB Scatter_0   scatter_single_pbls.sub
+JOB Scatter_0   scatter_single_pbls_iter0.sub
 VARS Scatter_0 star_id="kplr006184894" iter_ix="0" ntotchunks="5000"
 SCRIPT PRE Scatter_0 /usr/bin/python3 clean_directories.py kplr006184894
 
