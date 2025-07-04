@@ -233,8 +233,11 @@ def mask_top_pbls_peak(star_id, iter_ix=0, snr_threshold=8.0, maxiter=3):
     LOGINFO(f'Got P={P:.5f} d, Tdur={Tdur*24:.1f} hr, t0={t0:.4f}, SNR={max_snr:.1f}')
     LOGINFO(f'In-transit mask: {np.sum(in_transit)} points masked out of {len(time)}')
 
-    time_masked = time[~in_transit]
-    flux_masked = flux[~in_transit]
+    onearr = np.ones(len(time))
+    onearr[in_transit] = np.nan
+
+    time_masked = time * onearr
+    flux_masked = flux * onearr
 
     out_df = pd.DataFrame({'time': time, 'flux_original': flux,
                            'time_masked': time_masked, 'flux_masked': flux_masked})
