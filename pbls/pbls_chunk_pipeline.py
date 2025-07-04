@@ -96,9 +96,8 @@ def run_pbls_chunk(star_id, period_grid_chunk_ix, N_total_chunks, iter_ix=0):
         LOGINFO(f"{star_id}: {N_lcfiles} light curves found.")
         time, flux = preprocess_lightcurve(datas, hdrs, mission)
     else:
-        # Further iterations: just load the cached and pre-masked light curve
-        # made by the "MergeMask" job.
-        time, flux = get_OSG_local_csv_lightcurve(star_id, iter_ix=iter_ix)
+        # Load the masked light curve made by mask.sub last iteration.
+        time, flux = get_OSG_local_csv_lightcurve(star_id, iter_ix=iter_ix-1)
 
     # Generate period grid and chunk it.
     total_time = np.nanmax(time) - np.nanmin(time)

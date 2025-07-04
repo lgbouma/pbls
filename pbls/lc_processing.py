@@ -205,7 +205,9 @@ def mask_top_pbls_peak(star_id, iter_ix=0, snr_threshold=8.0, maxiter=3):
         mission = 'K2'
 
     # Load time and flux
-    # NOTE: duplicates code from pbls/pbls_chunk_pipeline.py
+    ########################################################################
+    # vvv BEGIN EXACT DUPLICATE of code from pbls/pbls_chunk_pipeline.py vvv
+    # [Otherwise masks + PBLS iterations wouldn't apply to exact same LCs.]
     if iter_ix == 0:
         if hostname in ['wh1', 'wh2', 'wh3']:
             raise NotImplementedError
@@ -215,9 +217,10 @@ def mask_top_pbls_peak(star_id, iter_ix=0, snr_threshold=8.0, maxiter=3):
             LOGINFO(f"{star_id}: {N_lcfiles} light curves found.")
             time, flux = preprocess_lightcurve(datas, hdrs, mission)
     else:
-        # Further iterations: just load the cached and pre-masked light curve
-        # made later by this function.
-        time, flux = get_OSG_local_csv_lightcurve(star_id, iter_ix=iter_ix)
+        # Load the masked light curve made by mask.sub last iteration.
+        time, flux = get_OSG_local_csv_lightcurve(star_id, iter_ix=iter_ix-1)
+    # ^^^ END EXACT DUPLICATE ^^^
+    ########################################################################
 
     # Get max power
     power = result['power']

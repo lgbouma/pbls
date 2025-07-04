@@ -47,15 +47,20 @@ def get_OSG_local_fits_lightcurve(star_id):
 
     
 def get_OSG_local_csv_lightcurve(star_id, iter_ix=0):
+    """
+    Get the masked light curve produced *during* a given iteration of PBLS.
+    So, if you're on the second PBLS iteration (which we index as iter_ix=1),
+    you should pass iter_ix=0.
+    """
 
     # CSV light curves are passed via HTCondor through the DAGman.
     csvpath = f"./{star_id}_masked_lightcurve_iter{iter_ix}.csv"
 
-    from astropy.table import Table
+    import pandas as pd
 
-    table = Table.read(csvpath, format='csv')
-    time = np.array(table['time_masked'])
-    flux = np.array(table['flux_masked'])
+    df = pd.read_csv(csvpath)
+    time = np.array(df['time_masked'])
+    flux = np.array(df['flux_masked'])
 
     return time, flux
 
