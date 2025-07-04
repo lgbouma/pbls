@@ -14,8 +14,6 @@ universe    = local
 executable          = run_pbls_mask.sh
 arguments           = $(star_id) $(iter_ix) $(threshold) $(maxiter)
 
-# transfer_input_files = run_pbls_mask.py, /ospool/ap21/data/ekul/Kepler/$(star_id).tar.gz, /ospool/ap21/data/ekul/pbls_results/PROCESSING/merged_periodograms/$(star_id)_merged_pbls_periodogram_iter$(iter_ix).pkl
-
 should_transfer_files   = Yes
 when_to_transfer_output = ON_EXIT
 
@@ -24,10 +22,5 @@ transfer_output_remaps  = "$(star_id)_masked_lightcurve_iter$(iter_ix).csv=/ospo
 log    = logs/mask_$(star_id)_iter$(iter_ix).log
 error  = logs/mask_$(star_id)_iter$(iter_ix).err
 output = logs/mask_$(star_id)_iter$(iter_ix).out
-
-#  +JobDurationCategory = "Medium"
-#  request_cpus    = 1 
-#  request_memory  = 2GB
-#  request_disk    = 10GB
 
 queue 1
