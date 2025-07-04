@@ -11,25 +11,53 @@ e.g. python clean_directories.py "kplr006184894" # Kepler-1627
 import os
 import sys
 from datetime import datetime
+from os.path import join
 
 def clean_result_and_log_directories(star_id, maxiter=3):
     """
-    Cleans directories for where to route results and logs (expected by condor_submit.sub)
+    "Pre" script to clean up directories for iterative PBLs runs.
+
+    Relevant locations are:
+    * Directories for all log files
+    * Previous periodogram and masked light curve files for the same star.
+    * Intermediate periodogram pkl chunk files.
+
+    The cleaning approach is to rename using a timestamp and random hex suffix.
     """
 
     res_basedir = '/ospool/ap21/data/ekul/pbls_results'
-    results_dir = os.path.join(res_basedir, star_id)
+    results_dir = join(res_basedir, star_id)
 
     log_basedir = '/home/ekul/proj/pbls/drivers/logs'
-    logs_dir = os.path.join(log_basedir, star_id)
-    iter_dirs = [os.path.join(log_basedir, star_id, f'iter{ix}') for ix in range(maxiter)]
+    logs_dir = join(log_basedir, star_id)
+    iter_dirs = [join(log_basedir, star_id, f'iter{ix}') for ix in range(maxiter)]
 
     proc_basedir = '/ospool/ap21/data/ekul/pbls_results/PROCESSING'
-    proc_dir = os.path.join(proc_basedir, star_id)
+    proc_dir = join(proc_basedir, star_id)
+
+    pgfiles = (
+        [join(proc_basedir, 'merged_periodograms', f'{star_id}_merged_pbls_periodogram_iter{iter_ix}.csv') for iter_ix in range(maxiter)]
+        +
+        [join(proc_basedir, 'merged_periodograms', f'{star_id}_merged_pbls_periodogram_iter{iter_ix}.pkl') for iter_ix in range(maxiter)]
+    )
+    pgfiles = [pgfile for pgfile in pgfiles if os.path.exists(pgfile)]
+
+    lcfiles =  [join(proc_basedir, 'masked_lightcurves', f'{star_id}_masked_lightcurve_iter{iter_ix}.csv') for iter_ix in range(maxiter)]
+    lcfiles = [lcfile for lcfile in lcfiles if os.path.exists(lcfile)]
+
+    allfiles = pgfiles + lcfiles
 
     dirtypes = ['results', 'logs', 'processing']
 
+    timestamp = datetime.now().strftime('%Y%m%d')
     suffix = os.urandom(4).hex()
+
+    for filepath in allfiles:
+        pre = filepath.split(".")[0]
+        post = filepath.split(".")[1]
+        new_filepath = ".".join([f"{pre}_{timestamp}_{suffix}", post])
+        os.rename(filepath, new_filepath)
+        print(f"Moved existing file to: {new_filepath}")
 
     for dirtype, directory in zip(dirtypes, [results_dir, logs_dir, proc_dir]):
 
@@ -40,7 +68,6 @@ def clean_result_and_log_directories(star_id, maxiter=3):
             # Directory already exists.  Move it to a new directory with both (a)
             # timestamp based on when it was last modified, and (b) a randomly
             # generated suffix.
-            timestamp = datetime.now().strftime('%Y%m%d')
             new_dir = f"{directory}_{timestamp}_{suffix}"
             os.rename(directory, new_dir)
             print(f"Moved existing {dirtype} directory to: {new_dir}")
