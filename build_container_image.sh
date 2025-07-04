@@ -24,10 +24,10 @@ sed -i.bak -E \
   drivers/scatter_single_pbls.sub
 sed -i.bak -E \
   "s#python_311_[[:alnum:]]+\.sif#${SIF_NAME}#g" \
-  drivers/mergemask.sub
+  drivers/run_pbls_mask.sh
 
 echo
-echo "Built ${SIF_NAME}, copied to \$DATA/, and updated condor submit scripts."
+echo "Built ${SIF_NAME}, copied to \$DATA/, and updated condor submit scripts (and shell wrappers)."
 echo "Backups of originals also written."
 echo
 

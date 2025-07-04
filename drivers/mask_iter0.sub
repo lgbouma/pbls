@@ -1,0 +1,33 @@
+# mask_iter0.sub
+# Execute light curve masking locally on the submit node within a sinuglarity
+# container that has standard scientific python install.
+# NB: run_pbls_mask.sh must be executable (chmod +x)
+# !!! Input file transfers are defined only for the first PBLS iteration. !!!
+#
+# Usage:
+#
+# Call through the DAG file.  Or, to debug:
+#   `condor_submit star_id=kplr006184894 iter_ix=0 threshold=8 maxiter=3 mask_iter0.sub`
+
+universe    = local
+
+executable          = run_pbls_mask.sh
+arguments           = $(star_id) $(iter_ix) $(threshold) $(maxiter)
+
+# transfer_input_files = run_pbls_mask.py, /ospool/ap21/data/ekul/Kepler/$(star_id).tar.gz, /ospool/ap21/data/ekul/pbls_results/PROCESSING/merged_periodograms/$(star_id)_merged_pbls_periodogram_iter$(iter_ix).pkl
+
+should_transfer_files   = Yes
+when_to_transfer_output = ON_EXIT
+
+transfer_output_remaps  = "$(star_id)_masked_lightcurve_iter$(iter_ix).csv=/ospool/ap21/data/ekul/pbls_results/PROCESSING/masked_lightcurves/$(star_id)_masked_lightcurve_iter$(iter_ix).csv"
+
+log    = logs/mask_$(star_id)_iter$(iter_ix).log
+error  = logs/mask_$(star_id)_iter$(iter_ix).err
+output = logs/mask_$(star_id)_iter$(iter_ix).out
+
+#  +JobDurationCategory = "Medium"
+#  request_cpus    = 1 
+#  request_memory  = 2GB
+#  request_disk    = 10GB
+
+queue 1
