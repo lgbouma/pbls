@@ -24,9 +24,14 @@ def clean_result_and_log_directories(star_id, maxiter=3):
     logs_dir = os.path.join(log_basedir, star_id)
     iter_dirs = [os.path.join(log_basedir, star_id, f'iter{ix}') for ix in range(maxiter)]
 
-    dirtypes = ['results', 'logs']
+    proc_basedir = '/ospool/ap21/data/ekul/pbls_results/PROCESSING'
+    proc_dir = os.path.join(proc_basedir, star_id)
 
-    for dirtype, directory in zip(dirtypes, [results_dir, logs_dir]):
+    dirtypes = ['results', 'logs', 'processing']
+
+    suffix = os.urandom(4).hex()
+
+    for dirtype, directory in zip(dirtypes, [results_dir, logs_dir, proc_dir]):
 
         if not os.path.exists(directory):
             os.makedirs(directory)
@@ -36,7 +41,6 @@ def clean_result_and_log_directories(star_id, maxiter=3):
             # timestamp based on when it was last modified, and (b) a randomly
             # generated suffix.
             timestamp = datetime.now().strftime('%Y%m%d')
-            suffix = os.urandom(4).hex()
             new_dir = f"{directory}_{timestamp}_{suffix}"
             os.rename(directory, new_dir)
             print(f"Moved existing {dirtype} directory to: {new_dir}")

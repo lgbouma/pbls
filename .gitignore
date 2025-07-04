@@ -22,3 +22,4 @@ art/*
 *fits
 *.bak
 *.lst
+*pkl

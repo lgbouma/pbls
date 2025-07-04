@@ -1,4 +1,4 @@
-# mergemask.sub
+# merge.sub
 # Execute locally on the submit node.  NB. this is the default OSG system-level
 # python environment.  (Apptainer can't access the filesystem)
 # Be sure to chmod +x run_pbls_merge.py.
