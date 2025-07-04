@@ -68,9 +68,9 @@ def run_pbls_chunk(star_id, period_grid_chunk_ix, N_total_chunks, iter_ix=0):
 
     LOGINFO(42*'-')
     LOGINFO(f"Starting {star_id}...")
-    LOGINFO("  Period grid chunk index: {period_grid_chunk_ix}")
-    LOGINFO("  Total number of chunks: {N_total_chunks}")
-    LOGINFO("  Iteration index: {iter_ix}")
+    LOGINFO(f"  Period grid chunk index: {period_grid_chunk_ix}")
+    LOGINFO(f"  Total number of chunks: {N_total_chunks}")
+    LOGINFO(f"  Iteration index: {iter_ix}")
 
     if 'kplr' in star_id or 'Kepler-' in star_id:
         mission = 'Kepler'
