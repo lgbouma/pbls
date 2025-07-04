@@ -6,6 +6,7 @@ Contents:
 * get_LS_Prot: Measure rotation period via Lomb-Scargle peak given time and flux.
 * time_bin_lightcurve: Bin the light curve in time with a fixed binsize.
 * transit_mask: Get transit mask given t, P, Tdur, t0
+* mask_top_pbls_peak: Read periodogram, mask in-transit points, save masked LC to CSV.
 """
 #############
 ## LOGGING ##
@@ -37,11 +38,14 @@ LOGEXCEPTION = LOGGER.exception
 ## IMPORTS ##
 #############
 import socket, pickle
-import numpy as np
+import numpy as np, pandas as pd
+from os.path import join
+
 from astropy.timeseries import LombScargle
 from wotan import slide_clip
 
 from pbls.getters import get_OSG_local_fits_lightcurve, get_OSG_local_csv_lightcurve
+
 
 def get_LS_Prot(time, flux, Prot_min=0.1, Prot_max=15., N_freq = 1_000_000, verbose=1):
     """measure rotation period (via Lomb Scargle peak) from the light curve"""
@@ -184,13 +188,21 @@ def mask_top_pbls_peak(star_id, iter_ix=0, snr_threshold=8.0, maxiter=3):
     if hostname in ['wh1', 'wh2', 'wh3']:
         outprocessingdir = f'/ar0/PROCESSING/merged_periodograms'
     elif 'osg' in hostname:
-        outprocessingdir = f'/ospool/ap21/data/ekul/pbls_results/PROCESSING/merged_periodograms'
+        # Pre-tarred light curves are passed via HTCondor mask.sub to CWD.
+        outprocessingdir = "./"
     else:
         raise NotImplementedError
 
     inpickle = join(outprocessingdir, f'{star_id}_merged_pbls_periodogram_iter{iter_ix}.pkl')
     with open(inpickle, 'rb') as f:
         result = pickle.load(f)
+
+    if 'kplr' in star_id or 'Kepler-' in star_id:
+        mission = 'Kepler'
+    elif 'tess' in star_id or 'TOI-' in star_id:
+        mission = 'TESS'
+    elif '_k2_' in star_id or 'K2-' in star_id:
+        mission = 'K2'
 
     # Load time and flux
     # NOTE: duplicates code from pbls/pbls_chunk_pipeline.py
