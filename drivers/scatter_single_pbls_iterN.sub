@@ -1,16 +1,16 @@
-# scatter_single_pbls_iter0.sub
+# scatter_single_pbls_iterN.sub
 #
 # Called by run_iterative_pbls.dag; star_id, iter_ix, and ntotchunks from there.
 #
 # or, to debug:
-# `condor_submit star_id=kplr006184894 ntotchunks=5000 iter_ix=0 scatter_single_pbls_iter0.sub`
+# `condor_submit star_id=kplr006184894 ntotchunks=5000 iter_ix=0 scatter_single_pbls_iterN.sub`
 
 universe    = vanilla
 +SingularityImage = "osdf:///ospool/ap21/data/ekul/python_311_3f829b.sif"
 
 executable  = exec_pipeline.sh
 arguments = $(star_id) $(period_chunk_ix) $(ntotchunks) $(iter_ix)
-transfer_input_files = run_pbls_chunk.py, /ospool/ap21/data/ekul/Kepler/$(star_id).tar.gz
+transfer_input_files = run_pbls_chunk.py, /ospool/ap21/data/ekul/pbls_results/PROCESSING/masked_lightcurves/$(star_id)_masked_lightcurve_iter$(iter_ix).csv
 
 should_transfer_files   = Yes
 when_to_transfer_output = ON_EXIT

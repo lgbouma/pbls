@@ -3,7 +3,7 @@
 # Unpack the envvironment (with the pbls package), and activate it
 echo 'hi'
 
-# Run the main Python script; called as run_pbls.py <star_id> <periodgrid_chunk_id> <N_total_chunks> <iter_ix>.
+# Main Python script; run_pbls_chunk.py <star_id> <periodgrid_chunk_id> <N_total_chunks> <iter_ix>.
 python3 run_pbls_chunk.py $1 $2 $3 $4
 
 # Move and tarball output (log  files, pkl files, anything downloaded from
