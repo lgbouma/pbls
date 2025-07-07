@@ -2,11 +2,11 @@
 # Run via `condor_submit_dag -f run_iterative_pbls.dag`
 
 # star identifier per SPOC / MAST convention
-# ntotchunks: 5000 at runtime; try 4 for debugging (within scatter_single_pbls.sub).
+# ntotchunks: 1000 at runtime; try 4 for debugging (within scatter_single_pbls.sub).
 
 # Iteration 0
 JOB Scatter_0   scatter_single_pbls_iter0.sub
-VARS Scatter_0 star_id="kplr006184894" iter_ix="0" ntotchunks="5000"
+VARS Scatter_0 star_id="kplr006184894" iter_ix="0" ntotchunks="1000"
 SCRIPT PRE Scatter_0 /usr/bin/python3 clean_directories.py kplr006184894
 
 JOB Merge_0 merge.sub
@@ -19,7 +19,7 @@ PARENT Merge_0 CHILD Mask_0
 
 # Iteration 1
 JOB Scatter_1   scatter_single_pbls_iterN.sub
-VARS Scatter_1 star_id="kplr006184894" iter_ix="1" ntotchunks="5000" prev_ix="0"
+VARS Scatter_1 star_id="kplr006184894" iter_ix="1" ntotchunks="1000" prev_ix="0"
 PARENT Mask_0 CHILD Scatter_1
 
 JOB Merge_1 merge.sub
@@ -32,7 +32,7 @@ PARENT Merge_1 CHILD Mask_1
 
 # Iteration 2
 JOB Scatter_2   scatter_single_pbls_iterN.sub
-VARS Scatter_2 star_id="kplr006184894" iter_ix="2" ntotchunks="5000" prev_ix="1"
+VARS Scatter_2 star_id="kplr006184894" iter_ix="2" ntotchunks="1000" prev_ix="1"
 PARENT Mask_1 CHILD Scatter_2
 
 JOB Merge_2 merge.sub

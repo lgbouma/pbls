@@ -18,7 +18,7 @@ else
 fi
 
 # Run the masking to create the new masked light curve.
-IMAGE=/ospool/ap21/data/ekul/python_311_181b21.sif
+IMAGE=/ospool/ap21/data/ekul/python_311_70eb44.sif
 apptainer exec "${IMAGE}" python run_pbls_mask.py $1 $2 $3 $4
 
 # Move the newly-made masked light curve to the results directory.

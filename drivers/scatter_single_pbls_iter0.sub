@@ -6,7 +6,7 @@
 # `condor_submit star_id=kplr006184894 ntotchunks=5000 iter_ix=0 scatter_single_pbls_iter0.sub`
 
 universe    = vanilla
-+SingularityImage = "osdf:///ospool/ap21/data/ekul/python_311_181b21.sif"
++SingularityImage = "osdf:///ospool/ap21/data/ekul/python_311_70eb44.sif"
 
 executable  = exec_pipeline.sh
 arguments = $(star_id) $(period_chunk_ix) $(ntotchunks) $(iter_ix)
@@ -26,8 +26,10 @@ request_cpus    = 1
 request_memory  = 2GB
 request_disk    = 10GB
 
+max_idle = 2000
+
 # WHEN IN PRODUCTION:
-#queue period_chunk_ix from inds_$(ntotchunks).lst
+queue period_chunk_ix from inds_$(ntotchunks).lst
 
 # WHEN DEBUGGING:
-queue period_chunk_ix from inds_4.lst
+#queue period_chunk_ix from inds_4.lst
