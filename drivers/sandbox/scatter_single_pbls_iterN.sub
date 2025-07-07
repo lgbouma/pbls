@@ -28,4 +28,8 @@ request_disk    = 10GB
 
 max_idle = 2000
 
-queue 1
+# WHEN IN PRODUCTION:
+queue period_chunk_ix from inds_$(ntotchunks).lst
+
+# WHEN DEBUGGING:
+#queue period_chunk_ix from inds_4.lst

@@ -1,9 +1,9 @@
 # scatter_single_pbls_iter0.sub
 #
-# Called by run_iterative_pbls.dag; star_id, iter_ix, and ntotchunks from there.
+# Called by run_iterative_pbls.dag; star_id, iter_ix, ntotchunks, and period_chunk_ix from there.
 #
 # or, to debug:
-# `condor_submit star_id=kplr006184894 ntotchunks=5000 iter_ix=0 scatter_single_pbls_iter0.sub`
+# `condor_submit star_id=kplr006184894 ntotchunks=5000 iter_ix=0 period_chunk_ix=42 scatter_single_pbls_iter0.sub`
 
 universe    = vanilla
 +SingularityImage = "osdf:///ospool/ap21/data/ekul/python_311_70eb44.sif"
@@ -28,8 +28,4 @@ request_disk    = 10GB
 
 max_idle = 2000
 
-# WHEN IN PRODUCTION:
-queue period_chunk_ix from inds_$(ntotchunks).lst
-
-# WHEN DEBUGGING:
-#queue period_chunk_ix from inds_4.lst
+queue 1

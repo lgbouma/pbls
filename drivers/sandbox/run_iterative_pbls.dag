@@ -1,17 +1,8 @@
 # run_iterative_pbls.dag ── one star_id per DAG run
 # Run via `condor_submit_dag -f run_iterative_pbls.dag`
 
-# ————————————————————————————————
-# Iteration 0: run cleanup, then 1 000 scatter chunks
-# ————————————————————————————————
-
-# Dummy “setup” job to run PRE‐script on submit node
-JOB  Clean_0   /bin/true
-SCRIPT PRE  Clean_0   /usr/bin/python3 clean_directories.py kplr006184894
-RETRY  Clean_0  1
-
-
-
+# star identifier per SPOC / MAST convention
+# ntotchunks: 1000 at runtime; try 4 for debugging (within scatter_single_pbls.sub).
 
 # Iteration 0
 JOB Scatter_0   scatter_single_pbls_iter0.sub

@@ -7,3 +7,13 @@ condor_submit python_in_env.sub
 condor_submit python_no_env.sub
 
 > Run a python script locally using the default OSG env.
+
+run_iterative_pbls.dag
+	scatter_single_pbls_iter0.sub
+	scatter_single_pbls_iterN.sub
+
+> Collection of scripts for the simplest DAG pattern, which entailed having
+> each condor .sub job launch a few thousand period grid chunks.  This is a
+> fine pattern, except the OSG has a ~1% fail rate per job, which causes the
+> entire DAG node to fail.  The solution is to write the DAG with independent
+> nodes, one per grid chunk.
