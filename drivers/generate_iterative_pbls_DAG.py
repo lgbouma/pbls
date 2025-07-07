@@ -39,7 +39,7 @@ merge_lines = f"""JOB Merge_0 merge.sub
 VARS Merge_0 star_id="{star_id}" iter_ix="0" threshold="{snrthreshold}" maxiter="{maxiter}"
 RETRY Merge_0 1
 """
-parent_scatter_line = "PARENT " + ",".join([f"Scatter_0_{str(ix).zfill(4)}" for ix in range(ntotchunks)]) + " CHILD Merge_0"
+parent_scatter_line = "PARENT " + " ".join([f"Scatter_0_{str(ix).zfill(4)}" for ix in range(ntotchunks)]) + " CHILD Merge_0"
 merge_lines += parent_scatter_line + "\n"
 
 mask_lines = f"""JOB Mask_0 mask.sub
@@ -80,7 +80,7 @@ PARENT Mask_{int(iter_ix - 1)} CHILD Scatter_{iter_ix}_{pstr}
 VARS Merge_{iter_ix} star_id="{star_id}" iter_ix="{iter_ix}" threshold="{snrthreshold}" maxiter="{maxiter}"
 RETRY Merge_{iter_ix} 1
 """
-    parent_scatter_line = "PARENT " + ",".join([f"Scatter_{iter_ix}_{str(ix).zfill(4)}" for ix in range(ntotchunks)]) + f" CHILD Merge_{iter_ix}"
+    parent_scatter_line = "PARENT " + " ".join([f"Scatter_{iter_ix}_{str(ix).zfill(4)}" for ix in range(ntotchunks)]) + f" CHILD Merge_{iter_ix}"
     merge_lines += parent_scatter_line + "\n"
 
     mask_lines = f"""JOB Mask_{iter_ix} mask.sub

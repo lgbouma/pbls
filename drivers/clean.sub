@@ -1,0 +1,7 @@
+# clean_0.sub
+universe   = local
+executable = /bin/true
+log        = logs/clean_0.log
+output     = logs/clean_0.out
+error      = logs/clean_0.err
+queue
