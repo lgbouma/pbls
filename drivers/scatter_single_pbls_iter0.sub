@@ -28,4 +28,7 @@ request_disk    = 10GB
 
 max_idle = 2000
 
+# Automatically remove a job once it goes on hold
+periodic_remove = (JobStatus == 5)
+
 queue 1
