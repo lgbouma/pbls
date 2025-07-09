@@ -49,6 +49,10 @@ from pbls.getters import get_OSG_local_fits_lightcurve, get_OSG_local_csv_lightc
 
 def get_LS_Prot(time, flux, Prot_min=0.1, Prot_max=15., N_freq = 1_000_000, verbose=1):
     """measure rotation period (via Lomb Scargle peak) from the light curve"""
+
+    time = np.array(time)
+    flux = np.array(flux)
+
     ls = LombScargle(time, flux)
     
     minimum_frequency = 1.0 / Prot_max

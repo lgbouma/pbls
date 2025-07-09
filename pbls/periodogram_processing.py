@@ -136,25 +136,27 @@ def iterative_gaussian_whitening(x: np.ndarray, y: np.ndarray) -> dict:
 
     
 def trimmean_whitening(x: np.ndarray, y: np.ndarray, trim_fraction: float = 0.1,
-                       Prot = None) -> dict:
+                       Prot = None, strong_factor=20.) -> dict:
     """
     Args:
         x: Period axis array.
         y: Power axis array (modified in place).
         trim_fraction: Fraction of data to trim from each end of the y array
         Prot: rotation period (days, float)
+        strong_factor: Factor to reduce window length by when Prot < Prot_breakpoint
+         ("overfits" in an attempt to extract sharp peaks not affected by stellar rotation)
     
     Returns:
         A dict mapping iteration index to a dict with keys:
         'offset','amp','mu','sigma','fwhm','baseline','x','y_start','residual'
     """
-    # TUNABLE HYPERPARAMETERS:
+    # NOTE TUNABLE HYPERPARAMETERS:
     # * window_length: default window length for flattening (days)
     # * Prot_breakpoint: rotation period threshold to switch methods (days) 
     # * trim_fraction: fraction to trim in trimmean filter
-    # * prefactor: width window to use when Prot < Prot_breakpoint
+    # * strong_factor: width window to use when Prot < Prot_breakpoint
+    #   Kepler default: 20.  TESS default more like 5.
     # * Whether to use trim_mean at all, or else some other smoothing method
-
 
     from wotan import flatten
 
@@ -166,10 +168,12 @@ def trimmean_whitening(x: np.ndarray, y: np.ndarray, trim_fraction: float = 0.1,
     assert float(N) > 5, "Periodogram grid too coarse / Window length too small for trimmean"
 
     Prot_breakpoint = 3
+    merged_harmonics = None
+    window_widths = None
 
     if Prot is None or Prot > Prot_breakpoint:
         flat_p, trend_p = flatten(
-            x, y, method='trim_mean', window_length=0.05, edge_cutoff=0.,
+            x, y, method='trim_mean', window_length=window_length, edge_cutoff=0.,
             break_tolerance=0.5, return_trend=True, proportiontocut=trim_fraction
         )
 
@@ -182,10 +186,15 @@ def trimmean_whitening(x: np.ndarray, y: np.ndarray, trim_fraction: float = 0.1,
         sel = (np.nanmin(x) < merged_harmonics) & (merged_harmonics < np.nanmax(x))
         merged_harmonics = merged_harmonics[sel]
 
+        HARMONIC_PROT_CAP = 25 # days
+        merged_harmonics = merged_harmonics[merged_harmonics < HARMONIC_PROT_CAP]
+
         # heuristic to set window widths based on Prot and harmonic number
         # widths get wider for longer trial periods
-        prefactor = 1/50 # larger -> wider windows
-        window_widths = merged_harmonics * Prot**0.5 * prefactor
+        prefactor = 2./50 # larger -> wider windows
+        window_widths = merged_harmonics * Prot**0.25 * prefactor
+        print(merged_harmonics)
+        print(window_widths)
 
         masks = []
         for harmonic, width in zip(merged_harmonics, window_widths):
@@ -194,10 +203,10 @@ def trimmean_whitening(x: np.ndarray, y: np.ndarray, trim_fraction: float = 0.1,
 
         combined_mask = np.any(np.array(masks), axis=0)
 
-        # in the masked regions, use a 5x smaller window length (-> 0.01 days by default)
+        # in the masked regions, use a 20x smaller window length (-> 0.0025 days by default)
         window_lengths = np.ones(len(x)) * window_length # default window length
         if np.any(combined_mask):
-            window_lengths[combined_mask] = np.ones(len(x[combined_mask])) * window_length / 5
+            window_lengths[combined_mask] = np.ones(len(x[combined_mask])) * window_length / strong_factor
 
         flat_p, trend_p = variablewindow_flatten(
             x, y, method='trim_mean', window_length=window_lengths,
@@ -229,6 +238,8 @@ def trimmean_whitening(x: np.ndarray, y: np.ndarray, trim_fraction: float = 0.1,
         'model': trend_p,
         'subtract_mask': None,
         'residual': residual,
+        'merged_harmonics': merged_harmonics,
+        'window_widths': window_widths,
     }
 
     iter_idx = 1
@@ -250,6 +261,8 @@ def trimmean_whitening(x: np.ndarray, y: np.ndarray, trim_fraction: float = 0.1,
         'model': np.ones(len(residual))*np.nanmedian(residual),
         'subtract_mask': None,
         'residual': _residual,
+        'merged_harmonics': merged_harmonics,
+        'window_widths': window_widths,
     }
 
     return results
