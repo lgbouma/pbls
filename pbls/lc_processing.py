@@ -173,11 +173,12 @@ def preprocess_lightcurve(datas, hdrs, mission):
     return time, flux
 
     
-def mask_top_pbls_peak(star_id, iter_ix=0, snr_threshold=8.0, maxiter=3):
+def mask_top_pbls_peak(star_id, iter_ix=0, snr_threshold=8.0, maxiter=3, overmaskfactor=2.0):
     """
     (Relevant solely for iterative PBLS)
     Read in the periodogram.
     Take the highest-SNR peak's model, and mask in-transit points.
+        (With Tdur multiplied by an `overmaskfactor` in case of underestimated Tdur.)
     Make a CSV light curve with time, original flux, and masked flux.
     Return the highest-SNR peak value.
     """
@@ -231,7 +232,7 @@ def mask_top_pbls_peak(star_id, iter_ix=0, snr_threshold=8.0, maxiter=3):
     P = best_params['period']
     Tdur = best_params['duration_hr'] / 24
     t0 = best_params['epoch_days']
-    in_transit = transit_mask(time, P, Tdur, t0)
+    in_transit = transit_mask(time, P, overmaskfactor*Tdur, t0)
 
     LOGINFO(f'Got P={P:.5f} d, Tdur={Tdur*24:.1f} hr, t0={t0:.4f}, SNR={max_snr:.1f}')
     LOGINFO(f'In-transit mask: {np.sum(in_transit)} points masked out of {len(time)}')
