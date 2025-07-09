@@ -1,7 +1,9 @@
 ##########################################
 # OPTIONS
-ntotchunks = 1000
-star_id = 'kplr006184894'
+ntotchunks = 500
+#star_id = 'kplr006184894' # kepler-1627
+#star_id = 'kplr008653134' # kepler-1643
+star_id = 'kplr010736489' # kepler-1974 = koi 7368
 snrthreshold = 8
 maxiter = 3
 ##########################################
@@ -18,9 +20,9 @@ header = f"""# run_iterative_pbls_{star_id}.dag
 # ————————————————————————————————
 
 # Dummy “setup” job to run PRE‐script on submit node
-JOB  Clean_0   /bin/true
+JOB    Clean_0   clean.sub
 SCRIPT PRE  Clean_0   /usr/bin/python3 clean_directories.py {star_id}
-RETRY  Clean_0  1
+RETRY  Clean_0   1
 
 # Scatter jobs for the first PBLS iteration
 """
@@ -59,7 +61,12 @@ lines = (
     mask_lines
 )
 
+#############################
+# ALL SUBSEQUENT ITERATIONS #
+#############################
 for iter_ix in range(1, maxiter):
+
+    prev_ix = int(iter_ix - 1)
 
     header = f"""# ————————————————————————————————
 # PBLS Iteration {iter_ix}
@@ -70,9 +77,9 @@ for iter_ix in range(1, maxiter):
     for period_chunk_ix in range(ntotchunks):
         pstr = f"{str(period_chunk_ix).zfill(4)}"
         scatter_line = f"""JOB Scatter_{iter_ix}_{pstr}  scatter_single_pbls_iterN.sub
-VARS Scatter_{iter_ix}_{pstr} star_id="{star_id}" iter_ix="{iter_ix}" ntotchunks="{ntotchunks}" period_chunk_ix="{period_chunk_ix}"
+VARS Scatter_{iter_ix}_{pstr} star_id="{star_id}" iter_ix="{iter_ix}" ntotchunks="{ntotchunks}" period_chunk_ix="{period_chunk_ix}" prev_ix="{prev_ix}"
 RETRY Scatter_{iter_ix}_{pstr} 3
-PARENT Mask_{int(iter_ix - 1)} CHILD Scatter_{iter_ix}_{pstr}
+PARENT Mask_{prev_ix} CHILD Scatter_{iter_ix}_{pstr}
 """
         scatter_lines.append(scatter_line)
 
