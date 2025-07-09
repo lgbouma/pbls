@@ -160,7 +160,7 @@ def trimmean_whitening(x: np.ndarray, y: np.ndarray, trim_fraction: float = 0.1,
 
     # points per day; assumes linear period spacing (which from an information
     # theory point of view is ill-advised)
-    n = len(x) / (x.max() - x.min())
+    n = len(x) / (np.nanmax(x) - np.nanmin(x))
     window_length = 0.05 # in units of days
     N = n * window_length
     assert float(N) > 5, "Periodogram grid too coarse / Window length too small for trimmean"

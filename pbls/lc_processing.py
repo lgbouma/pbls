@@ -210,7 +210,7 @@ def mask_top_pbls_peak(star_id, iter_ix=0, snr_threshold=8.0, maxiter=3, overmas
     # vvv BEGIN EXACT DUPLICATE of code from pbls/pbls_chunk_pipeline.py vvv
     # [Otherwise masks + PBLS iterations wouldn't apply to exact same LCs.]
     if iter_ix == 0:
-        if hostname in ['wh1', 'wh2', 'wh3']:
+        if hostname in ['wh1', 'wh2', 'wh3', 'marduk.local']:
             raise NotImplementedError
         else:
             datas, hdrs = get_OSG_local_fits_lightcurve(star_id)
