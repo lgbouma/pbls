@@ -197,7 +197,7 @@ def plot_summary_figure(time, flux, periods, power, best_params, best_model, pos
     # Panel D: Detrended flux (residuals)
     plot_detrended_flux(axd['C'], best_model, best_params)
 
-    tmin, tmax = time.min(), time.max()
+    tmin, tmax = np.nanmin(time), np.nanmax(time)
     for ax in [axd['A'], axd['B'], axd['C']]:
         ax.set_xlim((tmin, tmax))
     
