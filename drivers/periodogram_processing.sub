@@ -1,0 +1,27 @@
+# periodogram_processing.sub
+#
+# After making merged periodograms, but before masking, the periodogram
+# may need to be postprocessed to identify sharp (planet-induced) peaks.
+#
+# This does that processing locally on the submit node within a sinuglarity
+# container that has standard scientific python install.
+# NB: run_periodogram_processing.sh must be executable (chmod +x)
+#
+# Usage:
+#
+# Call through the DAG file.  Or, to debug:
+#   `condor_submit star_id=kplr006184894 iter_ix=0 periodogram_processing.sub`
+
+universe    = local
+
+executable          = run_periodogram_processing.sh
+arguments           = $(star_id) $(iter_ix)
+
+should_transfer_files   = Yes
+when_to_transfer_output = ON_EXIT
+
+log    = logs/periodogram_processing_$(star_id)_iter$(iter_ix).log
+error  = logs/periodogram_processing_$(star_id)_iter$(iter_ix).err
+output = logs/periodogram_processing_$(star_id)_iter$(iter_ix).out
+
+queue 1
