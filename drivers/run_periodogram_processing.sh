@@ -18,7 +18,7 @@ else
 fi
 
 # Run the periodogram post-processing to identify sharp peaks.
-IMAGE=/ospool/ap21/data/ekul/python_311_70eb44.sif
+IMAGE=/ospool/ap21/data/ekul/python_311_e37d1d.sif
 apptainer exec "${IMAGE}" python run_periodogram_processing.py $1 $2
 
 # Move the newly-made processing periodogram to the results directory.

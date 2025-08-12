@@ -28,6 +28,10 @@ sed -i.bak -E \
 sed -i.bak -E \
   "s#python_311_[[:alnum:]]+\.sif#${SIF_NAME}#g" \
   drivers/run_pbls_mask.sh
+sed -i.bak -E \
+  "s#python_311_[[:alnum:]]+\.sif#${SIF_NAME}#g" \
+  drivers/run_periodogram_processing.sh
+
 
 echo
 echo "Built ${SIF_NAME}, copied to \$DATA/, and updated condor submit scripts (and shell wrappers)."

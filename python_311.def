@@ -26,5 +26,8 @@ From: python:3.11
     pip3 install pandas==2.3.0
     pip3 install matplotlib==3.10.3
     
+    # Install aesthetic for plotting
+    pip3 install aesthetic==0.7
+    
     # Install pbls
     pip3 install /opt/pbls
