@@ -10,7 +10,6 @@ from pbls.mp_pbls import fast_pbls_search
 from pbls.period_grids import generate_uniformfreq_period_grid
 from pbls.paths import TESTRESULTSDIR
 
-
 def test_runtime():
     """
     Test runtime of fast_pbls_search for various dataset sizes.
