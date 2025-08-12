@@ -186,13 +186,13 @@ def trimmean_whitening(x: np.ndarray, y: np.ndarray, trim_fraction: float = 0.1,
         sel = (np.nanmin(x) < merged_harmonics) & (merged_harmonics < np.nanmax(x))
         merged_harmonics = merged_harmonics[sel]
 
-        HARMONIC_PROT_CAP = 25 # days
+        HARMONIC_PROT_CAP = 20 # days
         merged_harmonics = merged_harmonics[merged_harmonics < HARMONIC_PROT_CAP]
 
         # heuristic to set window widths based on Prot and harmonic number
         # widths get wider for longer trial periods
-        prefactor = 2./50 # larger -> wider windows
-        window_widths = merged_harmonics * Prot**0.25 * prefactor
+        prefactor = 2.5/50 # larger -> wider windows
+        window_widths = merged_harmonics * Prot**-0.1 * prefactor
         print(merged_harmonics)
         print(window_widths)
 

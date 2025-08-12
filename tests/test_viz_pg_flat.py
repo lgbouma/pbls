@@ -35,13 +35,11 @@ for star_id in star_ids:
     axs[1].plot(df.period, pg_results[max_key]['residual'], c='k', lw=0.5)
 
     if LS_Prot < 3:
-        ymin, ymax = np.nanmin(y), np.nanmax(y)
         for harmonic, width in zip(merged_harmonics, window_widths):
             if harmonic < 50:
                 left  = harmonic - width/2
                 right = harmonic + width/2
-                axs[0].vlines([left, right], ymin, ymax, colors='C2',
-                        linestyles='--', linewidth=1, zorder=-1, alpha=0.3)
+                axs[0].axvspan(left, right, color='C2', alpha=0.3, zorder=-1)
 
     axs[0].update({'ylabel':'SNR'})
     axs[1].update({'ylabel':'postSNR', 'xlabel':'period [days]'})
