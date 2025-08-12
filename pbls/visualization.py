@@ -45,8 +45,8 @@ def plot_best_model(ax, best_model):
     ax.plot(best_model['time'], best_model['flux'], 'k.', markersize=2, label="Data")
 
     # Split best_model['time'] and best_model['model_flux'] into segments at gaps > 0.5 days.
-    time_arr = best_model['time']
-    model_flux = best_model['model_flux']
+    time_arr = np.array(best_model['time'])
+    model_flux = np.array(best_model['model_flux'])
 
     # Compute differences between successive time points.
     dt = np.diff(time_arr)
@@ -80,14 +80,16 @@ def plot_detrended_flux(ax, best_model, best_params):
     """
     Plot the detrended flux (flux_resid vs time) on the provided Axes.
     """
-    ax.plot(best_model['time'], best_model['flux_resid'], 'k.', markersize=2)
+    t = np.array(best_model['time'])
+    flux_resid = np.array(best_model['flux_resid'])
 
-    t = best_model['time']
+    ax.plot(t, flux_resid, 'k.', markersize=2)
+
     P = best_params['period']
     Tdur = best_params['duration_hr'] / 24
     t0 = best_params['epoch_days']
     in_tra = transit_mask(t, P, Tdur, t0)
-    ax.plot(best_model['time'][in_tra], best_model['flux_resid'][in_tra], marker='.', c='red',  markersize=2, linewidth=0)
+    ax.plot(t[in_tra], flux_resid[in_tra], marker='.', c='red',  markersize=2, linewidth=0)
 
     ax.set_xlabel("Time (days)")
     ax.set_ylabel("Detrended Flux")
@@ -99,14 +101,17 @@ def plot_phase_folded_best(ax, best_model, best_params):
     The best_model['time'] and best_model['flux_resid'] are folded using best_params['period'].
     """
 
+    t = np.array(best_model['time'])
+    flux_resid = np.array(best_model['flux_resid'])
+
     t0 = best_params['epoch_days']
     period = best_params['period']
-    phase = ( (best_model['time']-t0) % period) / period
+    phase = ( (t-t0) % period) / period
     phase[phase > 0.5] -= 1.0  # shift phase to [-0.5, 0.5]
     phase_ingr = - 0.5 * (best_params['duration_hr']/24)/period # 0.  # let time = t0 above
     phase_egr  = 0.5 * (best_params['duration_hr']/24)/period
 
-    ax.plot(phase, best_model['flux_resid'], 'k.', markersize=2)
+    ax.plot(phase, flux_resid, 'k.', markersize=2)
     ax.set_xlabel("Phase")
     ax.set_ylabel("Detrended Flux")
     ax.set_title("Phase-Folded Recovered Signal")
@@ -180,8 +185,12 @@ def plot_summary_figure(time, flux, periods, power, best_params, best_model, pos
                  DDGGEEFF
                  """.strip()
         
-    from aesthetic.plot import set_style
-    set_style("science")
+    try:
+        from aesthetic.plot import set_style
+        set_style("science")
+    except:
+        # silently ignore if aesthetic is not installed
+        pass
 
     fig, axd = plt.subplot_mosaic(mosaic, figsize=(14, 10))
     

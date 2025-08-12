@@ -177,7 +177,7 @@ def preprocess_lightcurve(datas, hdrs, mission):
     return time, flux
 
     
-def mask_top_pbls_peak(star_id, iter_ix=0, snr_threshold=8.0, maxiter=3, overmaskfactor=2.0):
+def mask_top_pbls_peak(star_id, iter_ix=0, snr_threshold=8.0, maxiter=3, overmaskfactor=2.0, use_postprocessed_pg=True):
     """
     (Relevant solely for iterative PBLS)
     Read in the periodogram.
@@ -198,7 +198,11 @@ def mask_top_pbls_peak(star_id, iter_ix=0, snr_threshold=8.0, maxiter=3, overmas
     else:
         raise NotImplementedError
 
-    inpickle = join(outprocessingdir, f'{star_id}_merged_pbls_periodogram_iter{iter_ix}.pkl')
+    if use_postprocessed_pg:
+        inpickle = join(outprocessingdir, f'{star_id}_merged_postprocessed_pbls_periodogram_iter{iter_ix}.pkl')
+    else:
+        inpickle = join(outprocessingdir, f'{star_id}_merged_pbls_periodogram_iter{iter_ix}.pkl')
+
     with open(inpickle, 'rb') as f:
         result = pickle.load(f)
 

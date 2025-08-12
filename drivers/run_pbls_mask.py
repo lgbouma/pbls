@@ -51,7 +51,8 @@ def main():
     # Create the masked light curve for the periodogram's best peak, save it to
     # a CSV file, and return the max SNR.
     max_snr = mask_top_pbls_peak(
-        star_id, iter_ix=iter_ix, snr_threshold=snr_threshold, maxiter=maxiter
+        star_id, iter_ix=iter_ix, snr_threshold=snr_threshold, maxiter=maxiter,
+        use_postprocessed_pg=True
     )
 
     continue_condition = (max_snr > snr_threshold) and (iter_ix < maxiter)

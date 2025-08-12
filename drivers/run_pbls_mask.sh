@@ -6,8 +6,14 @@
 
 echo 'Running the masking locally...'
 
-# Transfer merged periodogram to where apptainer will see it.  Made by merge.sub.
-cp /ospool/ap21/data/ekul/pbls_results/PROCESSING/merged_periodograms/$1_merged_pbls_periodogram_iter$2.pkl .
+use_postprocessed_pg=true
+
+# Transfer the appropriate merged periodogram based on use_postprocessed_pg.
+if [ "$use_postprocessed_pg" = true ]; then
+    cp /ospool/ap21/data/ekul/pbls_results/PROCESSING/merged_periodograms/$1_merged_postprocessed_pbls_periodogram_iter$2.pkl .
+else
+    cp /ospool/ap21/data/ekul/pbls_results/PROCESSING/merged_periodograms/$1_merged_pbls_periodogram_iter$2.pkl .
+fi
 
 # Transfer the appropriate stage of light curve 
 if [ "$2" -eq 0 ]; then
@@ -18,7 +24,7 @@ else
 fi
 
 # Run the masking to create the new masked light curve.
-IMAGE=/ospool/ap21/data/ekul/python_311_70eb44.sif
+IMAGE=/ospool/ap21/data/ekul/python_311_e37d1d.sif
 apptainer exec "${IMAGE}" python run_pbls_mask.py $1 $2 $3 $4
 
 # Move the newly-made masked light curve to the results directory.
@@ -26,7 +32,7 @@ apptainer exec "${IMAGE}" python run_pbls_mask.py $1 $2 $3 $4
 mv $1_masked_lightcurve_iter$2.csv /ospool/ap21/data/ekul/pbls_results/PROCESSING/masked_lightcurves/$1_masked_lightcurve_iter$2.csv
 
 # Clean copied scratch.
-rm ./$1_merged_pbls_periodogram_iter$2.pkl
+rm ./$1_merged_*pbls_periodogram_iter$2.pkl
 rm ./$1.tar.gz
 if [ "$2" -gt 0 ]; then
     prev_iter=$(( $2 - 1 ))

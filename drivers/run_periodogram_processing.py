@@ -118,7 +118,8 @@ def main():
 
     # Define directories for reading merged periodograms
     if hostname in ['wh1', 'wh2', 'wh3']:
-        outprocessingdir = f'/ar0/PROCESSING/merged_periodograms'
+        outprocessingdir = f'/ar0/PROCESSING/merged_periodograms/viz'
+        if not os.path.exists(outprocessingdir): os.makedirs(outprocessingdir)
     elif 'osg' in hostname:
         # Pre-tarred light curves are passed via HTCondor mask.sub to CWD.
         outprocessingdir = "./"
@@ -148,8 +149,7 @@ def main():
     fig = plot_summary_figure(time, flux, x_start, y_start, bp, bm, post_power=post_power)
 
     plot_path = join(
-        outprocessingdir, 'viz',
-        f"{star_id}_pbls_pgproc{method}_iter{iter_ix}.png"
+        outprocessingdir, f"{star_id}_pbls_pgproc{method}_iter{iter_ix}.png"
     )
     fig.savefig(plot_path, dpi=300, bbox_inches="tight")
     LOGINFO(f"Saved summary figure to {plot_path}")
