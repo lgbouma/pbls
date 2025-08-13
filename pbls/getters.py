@@ -1,9 +1,45 @@
 """
 Contents:
-get_mast_lightcurve: Download MAST light curves via Lightkurve for a given star.
-get_tess_data: thin wrapper for TESS SPOC 120-second cadence light curves.
-    fast_get_mast_lightcurve: As above, but using a hard-coded cache.
+
+Light curve getters:
+    get_mast_lightcurve: Download MAST light curves via Lightkurve for a given star.
+    get_tess_data: thin wrapper for TESS SPOC 120-second cadence light curves.
+        fast_get_mast_lightcurve: As above, but using a hard-coded cache.
+    get_OSG_local_fits_lightcurve: Get LCs from local FITS (on OSG).
+    get_OSG_local_csv_lightcurve: Get (masked) LC from local CSV (on OSG).
+
+Star ID parsers:
+    parse_star_id: Get mission & (optional) injection parameters from star_id.
 """
+#############
+## LOGGING ##
+#############
+import logging
+from pbls import log_sub, log_fmt, log_date_fmt
+
+DEBUG = False
+if DEBUG:
+    level = logging.DEBUG
+else:
+    level = logging.INFO
+LOGGER = logging.getLogger(__name__)
+logging.basicConfig(
+    level=level,
+    style=log_sub,
+    format=log_fmt,
+    datefmt=log_date_fmt,
+    force=True
+)
+
+LOGDEBUG = LOGGER.debug
+LOGINFO = LOGGER.info
+LOGWARNING = LOGGER.warning
+LOGERROR = LOGGER.error
+LOGEXCEPTION = LOGGER.exception
+
+#############
+## IMPORTS ##
+#############
 import os
 from glob import glob
 from astropy.io import fits
@@ -226,3 +262,69 @@ def get_mast_lightcurve(star_id, mission='TESS', cadence=120, author='SPOC', cac
         hdrs.append(hdul[0].header)
 
     return data, hdrs
+
+    
+def parse_star_id(star_id):
+
+    # get mission from star_id
+    if 'kplr' in star_id or 'Kepler-' in star_id:
+        mission = 'Kepler'
+    elif 'tess' in star_id or 'TOI-' in star_id:
+        mission = 'TESS'
+    elif '_k2_' in star_id or 'K2-' in star_id:
+        mission = 'K2'
+
+    # create injection dict if needed
+    # star_id format in such cases:
+    # "kplr12390401_inject-PXpXXX-RYpYYY-TZpZZZ-EXpXXX" for period, radius, duration, epoch.
+    inject_dict = None
+
+    base_star_id = star_id
+
+    if '_inject-' in star_id:
+
+        # hard Rstar cache for common cases
+        # NOTE: this doesn't scale; if you want to inject on stars other than those
+        # specified here, you'll need to estimate those stellar radii some other
+        # way.
+        TICID_RSTARS = {
+            '166527623': 1.38, # HIP 67522
+            '460205581': 1.022, # TOI-837
+            '441420236': 0.75, # AU Mic
+            '146520535': 1.022, # TOI-942
+            '120105470': 0.881, # Kepler-1627
+        }
+        KICID_RSTARS = {
+            '6184894': 0.881, # Kepler-1627
+            '8653134': 0.855,    # 'Kepler-1643': 
+            '10736489': 0.876,   # 'Kepler-1974' = KOI-7368
+            '8873450': 0.790,    # 'Kepler-1975' = KOI-7913A 
+        }
+
+        base_star_id = star_id.split('_inject-')[0]
+        if base_star_id.startswith('kplr'):
+            # remove "kplr" and any leading zeros
+            kicid = base_star_id[4:].lstrip('0')
+            Rs_Rsun = KICID_RSTARS[kicid]
+            Rs_earths = Rs_Rsun * 109.07637071
+        else:
+            raise NotImplementedError("Only Kepler injection parsing is implemented. "+
+                                      "To do more, add Rstar logic here.")
+
+        inject_str = star_id.split('_inject-')[1]
+        inject_parts = inject_str.split('-')
+        inject_dict = {}
+        for part in inject_parts:
+            if part.startswith('P'):
+                inject_dict['period'] = float(part[1:].replace('p', '.'))
+            elif part.startswith('T'):
+                inject_dict['duration_hr'] = float(part[1:].replace('p', '.'))
+            elif part.startswith('E'):
+                inject_dict['epoch'] = float(part[1:].replace('p', '.'))
+            elif part.startswith('R'):
+                Rp_earths = float(part[1:].replace('p', '.')) # units: Earth radii
+                inject_dict['depth'] = (Rp_earths / Rs_earths) ** 2
+
+        LOGINFO(f"  Injection parameters: {inject_dict}")
+
+    return mission, inject_dict, base_star_id
