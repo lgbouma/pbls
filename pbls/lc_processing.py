@@ -2,7 +2,7 @@
 Standard light curve processing functions.
 
 Contents:
-* preprocess_lightcurve: Standard cleaning before PBLS.
+* preprocess_lightcurve: Standard cleaning before PBLS (& optional transit injection).
 * get_LS_Prot: Measure rotation period via Lomb-Scargle peak given time and flux.
 * time_bin_lightcurve: Bin the light curve in time with a fixed binsize.
 * transit_mask: Get transit mask given t, P, Tdur, t0
@@ -44,7 +44,9 @@ from os.path import join
 from astropy.timeseries import LombScargle
 from wotan import slide_clip
 
-from pbls.getters import get_OSG_local_fits_lightcurve, get_OSG_local_csv_lightcurve
+from pbls.getters import (
+    get_OSG_local_fits_lightcurve, get_OSG_local_csv_lightcurve, parse_star_id
+)
 
 
 def get_LS_Prot(time, flux, Prot_min=0.1, Prot_max=15., N_freq = 1_000_000, verbose=1):
@@ -100,16 +102,29 @@ def time_bin_lightcurve(time, flux, binsize):
     return np.array(binned_time), np.array(binned_flux)
 
 
-def preprocess_lightcurve(datas, hdrs, mission):
+def preprocess_lightcurve(datas, hdrs, mission, inject_dict=None):
     """
-    Drop non-zero quality flags; require finite time and flux;
-    require positive flux; set dtype to float64; median normalize
-    sliding clip [100,2]*MAD over LS_Prot/20 to trim flares;
-    re-require finite time and flux.
-    The flare window requires at least 10 points per window
-    -> K2/Kepler means at least 5 hours window;
-    TESS means at least 20 minute window;
-    but standard window is 10% of LS_Prot.
+    Standard cleaning before PBLS and optional transit injection.
+
+    "Standard cleaning" entails:
+
+        Drop non-zero quality flags; require finite time and flux; require positive
+        flux; set dtype to float64; median normalize; sliding clip [100,2]*MAD over
+        LS_Prot/20 to trim flares; re-require finite time and flux.  The flare
+        window requires at least 10 points per window -> K2/Kepler means at least 5
+        hours window; TESS means at least 20 minute window; but standard window is
+        10% of LS_Prot.
+
+    Injection is done here, in "preprocessing", to maintain consistency betwee
+    the real vs. injected pipeline runs.  If performed, it is done immediately
+    after median normalization (& a second normalization is then performed).
+    
+    inject_dict : optional dict
+        Optional dictionary.  If passed, required keys are:
+            - 'period' (float, days)
+            - 'duration_hr' (float, hours)
+            - 'depth' (float, same units as flux; e.g., relative flux)
+            - 'epoch' (float, days)
     """
 
     _time, _flux = [], []
@@ -145,8 +160,13 @@ def preprocess_lightcurve(datas, hdrs, mission):
 
         time = time.astype(np.float64)
         flux = flux.astype(np.float64)
-        
+
         flux /= np.nanmedian(flux)
+
+        if isinstance(inject_dict, dict):
+            from pbls.inject import inject_transit
+            flux = inject_transit(time, flux, inject_dict)
+            flux /= np.nanmedian(flux)
 
         LS_Prot = get_LS_Prot(time, flux)
         cadence = np.nanmedian(np.diff(time))
@@ -177,7 +197,8 @@ def preprocess_lightcurve(datas, hdrs, mission):
     return time, flux
 
     
-def mask_top_pbls_peak(star_id, iter_ix=0, snr_threshold=8.0, maxiter=3, overmaskfactor=2.0, use_postprocessed_pg=True):
+def mask_top_pbls_peak(star_id, iter_ix=0, snr_threshold=8.0, maxiter=3,
+                       overmaskfactor=3.0, use_postprocessed_pg=True):
     """
     (Relevant solely for iterative PBLS)
     Read in the periodogram.
@@ -206,12 +227,7 @@ def mask_top_pbls_peak(star_id, iter_ix=0, snr_threshold=8.0, maxiter=3, overmas
     with open(inpickle, 'rb') as f:
         result = pickle.load(f)
 
-    if 'kplr' in star_id or 'Kepler-' in star_id:
-        mission = 'Kepler'
-    elif 'tess' in star_id or 'TOI-' in star_id:
-        mission = 'TESS'
-    elif '_k2_' in star_id or 'K2-' in star_id:
-        mission = 'K2'
+    mission, inject_dict, base_star_id = parse_star_id(star_id)
 
     # Load time and flux
     ########################################################################
@@ -221,10 +237,10 @@ def mask_top_pbls_peak(star_id, iter_ix=0, snr_threshold=8.0, maxiter=3, overmas
         if hostname in ['wh1', 'wh2', 'wh3', 'marduk.local']:
             raise NotImplementedError
         else:
-            datas, hdrs = get_OSG_local_fits_lightcurve(star_id)
+            datas, hdrs = get_OSG_local_fits_lightcurve(base_star_id)
             N_lcfiles = len(datas)
             LOGINFO(f"{star_id}: {N_lcfiles} light curves found.")
-            time, flux = preprocess_lightcurve(datas, hdrs, mission)
+            time, flux = preprocess_lightcurve(datas, hdrs, mission, inject_dict=inject_dict)
     else:
         # Load the masked light curve made by mask.sub last iteration.
         time, flux = get_OSG_local_csv_lightcurve(star_id, iter_ix=iter_ix-1)
