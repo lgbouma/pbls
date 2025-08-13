@@ -28,7 +28,9 @@ request_disk    = 20GB
 
 max_idle = 2000
 
-# Automatically remove job if held (status 5) OR idle > 1 hour
-periodic_remove = (JobStatus == 5) || (JobStatus == 1 && (CurrentTime - EnteredCurrentStatus) > 3600)
+# Automatically remove job if idle (status 1) > 30 minutes
+# Automatically remove remove if held (status 5) > 5 minutes (gives policy holds a chance to clear)
+periodic_remove = (JobStatus == 1 && (CurrentTime - EnteredCurrentStatus) > 1800) || (JobStatus == 5 && (CurrentTime - EnteredCurrentStatus) > 300)
+
 
 queue 1
