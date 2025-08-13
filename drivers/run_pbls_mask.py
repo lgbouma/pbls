@@ -52,7 +52,7 @@ def main():
     # a CSV file, and return the max SNR.
     max_snr = mask_top_pbls_peak(
         star_id, iter_ix=iter_ix, snr_threshold=snr_threshold, maxiter=maxiter,
-        use_postprocessed_pg=True
+        overmaskfactor=3.0, use_postprocessed_pg=True
     )
 
     continue_condition = (max_snr > snr_threshold) and (iter_ix < maxiter)
