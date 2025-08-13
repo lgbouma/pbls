@@ -4,6 +4,8 @@ ntotchunks = 500
 star_id = 'kplr006184894' # kepler-1627
 star_id = 'kplr008653134' # kepler-1643
 star_id = 'kplr010736489' # kepler-1974 = koi 7368
+star_id = 'kplr006184894_inject-P6p941-R10p1-T2p6-E1p234' # kepler-1627 injection
+star_id = 'kplr008653134_inject-P4p898-R1p5-T2p6-E1p234' # kepler-1643 injection
 snrthreshold = 8
 maxiter = 3
 ##########################################
