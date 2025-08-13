@@ -33,7 +33,9 @@ import time as timemodule
 import numpy as np
 
 from pbls.paths import CACHEDIR
-from pbls.getters import get_OSG_local_fits_lightcurve, get_OSG_local_csv_lightcurve
+from pbls.getters import (
+    get_OSG_local_fits_lightcurve, get_OSG_local_csv_lightcurve, parse_star_id
+)
 from pbls.lc_processing import preprocess_lightcurve
 from pbls.period_grids import generate_uniformfreq_period_grid
 from pbls.pbls import pbls_search
@@ -60,7 +62,7 @@ def run_pbls_chunk(star_id, period_grid_chunk_ix, N_total_chunks, iter_ix=0):
     """
 
     poly_order = 3
-    #durations_hr = np.array([1, 2, 3, 4, 6])
+    #durations_hr = np.array([1, 2, 3, 4, 6]) # cheapest
     durations_hr = np.array([1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6])
     period_min = 2.0
     clamp_period_max = 50.0
@@ -72,12 +74,8 @@ def run_pbls_chunk(star_id, period_grid_chunk_ix, N_total_chunks, iter_ix=0):
     LOGINFO(f"  Total number of chunks: {N_total_chunks}")
     LOGINFO(f"  Iteration index: {iter_ix}")
 
-    if 'kplr' in star_id or 'Kepler-' in star_id:
-        mission = 'Kepler'
-    elif 'tess' in star_id or 'TOI-' in star_id:
-        mission = 'TESS'
-    elif '_k2_' in star_id or 'K2-' in star_id:
-        mission = 'K2'
+    mission, inject_dict, base_star_id = parse_star_id(star_id)
+
     author = mission_dtype[mission][0]
     cadence = mission_dtype[mission][1]
 
@@ -90,14 +88,14 @@ def run_pbls_chunk(star_id, period_grid_chunk_ix, N_total_chunks, iter_ix=0):
             cache_dir = join(DATADIR, 'cache')
             os.makedirs(cache_dir, exist_ok=True)
             datas, hdrs = fast_get_mast_lightcurve(
-                star_id, mission=mission, cadence=cadence,
+                base_star_id, mission=mission, cadence=cadence,
                 author=author, cache_dir=cache_dir)
         else:
-            datas, hdrs = get_OSG_local_fits_lightcurve(star_id)
+            datas, hdrs = get_OSG_local_fits_lightcurve(base_star_id)
 
         N_lcfiles = len(datas)
         LOGINFO(f"{star_id}: {N_lcfiles} light curves found.")
-        time, flux = preprocess_lightcurve(datas, hdrs, mission)
+        time, flux = preprocess_lightcurve(datas, hdrs, mission, inject_dict=inject_dict)
         LOGINFO(f"{star_id}: {len(time)} points found (iter_ix=0).")
     else:
         # Load the masked light curve made by mask.sub last iteration.
