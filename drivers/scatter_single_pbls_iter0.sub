@@ -6,11 +6,15 @@
 # `condor_submit star_id=kplr006184894 ntotchunks=5000 iter_ix=0 period_chunk_ix=42 scatter_single_pbls_iter0.sub`
 
 universe    = vanilla
-+SingularityImage = "osdf:///ospool/ap21/data/ekul/python_311_e37d1d.sif"
++SingularityImage = "osdf:///ospool/ap21/data/ekul/python_311_c174a4.sif"
+
+# expose CLI var into the job ad
++star_id = "$(star_id)"
++base_star_id = replace("_inject.*", MY.star_id, "")
 
 executable  = exec_pipeline.sh
 arguments = $(star_id) $(period_chunk_ix) $(ntotchunks) $(iter_ix)
-transfer_input_files = run_pbls_chunk.py, /ospool/ap21/data/ekul/Kepler/$(star_id).tar.gz
+transfer_input_files = run_pbls_chunk.py, /ospool/ap21/data/ekul/Kepler/$$([MY.base_star_id]).tar.gz
 
 should_transfer_files   = Yes
 when_to_transfer_output = ON_EXIT
