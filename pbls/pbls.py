@@ -117,6 +117,8 @@ def pbls_search(time, flux, periods, durations_hr, poly_order=2, cache_coeffs=Fa
     
     tmin = np.min(time)
     tmax = np.max(time)
+    cadence = np.median(np.diff(np.sort(time)))
+    baseline_time = tmax - tmin
     
     # Ensure time and flux are sorted in time
     sort_idx = np.argsort(time)
@@ -222,6 +224,19 @@ def pbls_search(time, flux, periods, durations_hr, poly_order=2, cache_coeffs=Fa
                 n_out = len(all_out_transit_flux)
                 var_in = np.var(all_in_transit_flux)
                 var_out = np.var(all_out_transit_flux)
+
+                # When NaN-masking occurs, encounter an odd behavior in which
+                # single-point outliers skew the entire SNR distribution.
+                # Here, we require that at least 10% of the expected in-transit
+                # points are actually present.  (This fraction is low enough to
+                # allow e.g. missed quarters or other normal gaps.)
+                trial_duration_days = trial_duration * trial_period
+                expect_n_transits = baseline_time / trial_period
+                expected_n_in = expect_n_transits * (trial_duration_days / cadence)
+                minimum_covering_fraction = 0.1
+                if n_in < minimum_covering_fraction * expected_n_in:
+                    continue
+
                 snr = depth / np.sqrt(var_in / n_in + var_out / n_out)
                 
                 # Update period-level max SNR
