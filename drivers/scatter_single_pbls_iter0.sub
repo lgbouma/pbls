@@ -6,7 +6,7 @@
 # `condor_submit star_id=kplr006184894 ntotchunks=5000 iter_ix=0 period_chunk_ix=42 scatter_single_pbls_iter0.sub`
 
 universe    = vanilla
-+SingularityImage = "osdf:///ospool/ap21/data/ekul/python_311_c174a4.sif"
++SingularityImage = "osdf:///ospool/ap21/data/ekul/python_311_bd9e29.sif"
 
 # expose CLI var into the job ad
 +star_id = "$(star_id)"
