@@ -8,6 +8,9 @@ echo 'Running the masking locally...'
 
 use_postprocessed_pg=true
 
+# Derive base star ID (drops any "_inject-..." suffix via bash parameter expansion).
+base_star_id="${1%%_inject-*}"
+
 # Transfer the appropriate merged periodogram based on use_postprocessed_pg.
 if [ "$use_postprocessed_pg" = true ]; then
     cp /ospool/ap21/data/ekul/pbls_results/PROCESSING/merged_periodograms/$1_merged_postprocessed_pbls_periodogram_iter$2.pkl .
@@ -17,7 +20,7 @@ fi
 
 # Transfer the appropriate stage of light curve 
 if [ "$2" -eq 0 ]; then
-    cp /ospool/ap21/data/ekul/Kepler/"$1".tar.gz .
+    cp /ospool/ap21/data/ekul/Kepler/"$base_star_id".tar.gz .
 else
     prev_iter=$(( $2 - 1 ))
     cp /ospool/ap21/data/ekul/pbls_results/PROCESSING/masked_lightcurves/"${1}_masked_lightcurve_iter${prev_iter}.csv" .
@@ -33,7 +36,9 @@ mv $1_masked_lightcurve_iter$2.csv /ospool/ap21/data/ekul/pbls_results/PROCESSIN
 
 # Clean copied scratch.
 rm ./$1_merged_*pbls_periodogram_iter$2.pkl
-rm ./$1.tar.gz
+if [ -f "./$base_star_id.tar.gz" ]; then
+    rm "./$base_star_id.tar.gz"
+fi
 if [ "$2" -gt 0 ]; then
     prev_iter=$(( $2 - 1 ))
     prev_file="${1}_masked_lightcurve_iter${prev_iter}.csv"

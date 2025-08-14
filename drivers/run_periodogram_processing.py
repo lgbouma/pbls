@@ -31,7 +31,9 @@ import os, sys, socket, pickle
 from os.path import join
 import numpy as np, pandas as pd
 
-from pbls.getters import get_OSG_local_fits_lightcurve, get_OSG_local_csv_lightcurve
+from pbls.getters import (
+    get_OSG_local_fits_lightcurve, get_OSG_local_csv_lightcurve, parse_star_id
+)
 from pbls.lc_processing import preprocess_lightcurve, get_LS_Prot
 from pbls.periodogram_processing import iterative_gaussian_whitening, trimmean_whitening
 from pbls.pbls import pbls_search
@@ -56,12 +58,7 @@ def main():
 
     hostname = socket.gethostname()
 
-    if 'kplr' in star_id or 'Kepler-' in star_id:
-        mission = 'Kepler'
-    elif 'tess' in star_id or 'TOI-' in star_id:
-        mission = 'TESS'
-    elif '_k2_' in star_id or 'K2-' in star_id:
-        mission = 'K2'
+    mission, inject_dict, base_star_id = parse_star_id(star_id)
 
     ##########################################
        
@@ -79,10 +76,10 @@ def main():
         if hostname in ['wh1', 'wh2', 'wh3', 'marduk.local']:
             raise NotImplementedError
         else:
-            datas, hdrs = get_OSG_local_fits_lightcurve(star_id)
+            datas, hdrs = get_OSG_local_fits_lightcurve(base_star_id)
             N_lcfiles = len(datas)
             LOGINFO(f"{star_id}: {N_lcfiles} light curves found.")
-            time, flux = preprocess_lightcurve(datas, hdrs, mission)
+            time, flux = preprocess_lightcurve(datas, hdrs, mission, inject_dict=inject_dict)
     else:
         # Load the masked light curve made by mask.sub last iteration.
         time, flux = get_OSG_local_csv_lightcurve(star_id, iter_ix=iter_ix-1)

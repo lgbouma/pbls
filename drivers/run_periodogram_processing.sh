@@ -6,12 +6,15 @@
 
 echo 'Running the periodogram post-processing locally...'
 
+# Derive base star ID (drops any "_inject-..." suffix via bash parameter expansion).
+base_star_id="${1%%_inject-*}"
+
 # Transfer merged periodogram to where apptainer will see it.  Made by merge.sub.
 cp /ospool/ap21/data/ekul/pbls_results/PROCESSING/merged_periodograms/$1_merged_pbls_periodogram_iter$2.csv .
 
 # Transfer the appropriate stage of light curve 
 if [ "$2" -eq 0 ]; then
-    cp /ospool/ap21/data/ekul/Kepler/"$1".tar.gz .
+    cp /ospool/ap21/data/ekul/Kepler/"$base_star_id".tar.gz .
 else
     prev_iter=$(( $2 - 1 ))
     cp /ospool/ap21/data/ekul/pbls_results/PROCESSING/masked_lightcurves/"${1}_masked_lightcurve_iter${prev_iter}.csv" .
@@ -29,7 +32,9 @@ mv $1_pbls_pgproc*_iter$2.png /ospool/ap21/data/ekul/pbls_results/PROCESSING/viz
 
 # Clean copied scratch.
 rm ./$1_merged_pbls_periodogram_iter$2.csv
-rm ./$1.tar.gz
+if [ -f "./$base_star_id.tar.gz" ]; then
+    rm "./$base_star_id.tar.gz"
+fi
 if [ "$2" -gt 0 ]; then
     prev_iter=$(( $2 - 1 ))
     prev_file="${1}_masked_lightcurve_iter${prev_iter}.csv"
