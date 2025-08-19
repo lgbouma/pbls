@@ -20,6 +20,7 @@ N_INJRECOVS=20 # Number of injection recovery experiments to run for this star.
 NTOTCHUNKS=200 # Do not lower below 200 at risk of medium runtime cap.
 SNRTHRESH=8
 MAXITER=2 # Number of PBLS iterations per experiment.
+LOG_FILE="injrecov_submissions.csv" # Pipe-delimited CSV log
 
 function usage() {
   echo "Usage: $0 --star <kplr#########> [--n 50] [--ntotchunks 200] [--snr 8] [--maxiter 2]" >&2
@@ -51,6 +52,37 @@ if [[ -z "$STAR_ID_BASE" ]]; then
   usage
   exit 1
 fi
+
+# Ensure CSV log exists with header
+ensure_log() {
+  if [[ ! -f "$LOG_FILE" ]]; then
+    echo "STAR_ID|P|Rp|T|E|first_submission_time|resubmission_times" > "$LOG_FILE"
+  fi
+}
+
+# Append a new submission row if STAR_ID not already present
+log_new_submission() {
+  local sid="$1" p="$2" rp="$3" t="$4" e="$5" tfirst="$6"
+  if ! grep -Fq "^${sid}|" "$LOG_FILE"; then
+    printf "%s|%s|%s|%s|%s|%s|%s\n" "$sid" "$p" "$rp" "$t" "$e" "$tfirst" "" >> "$LOG_FILE"
+  fi
+}
+
+# Append a resubmission timestamp to the row for STAR_ID
+log_resubmission() {
+  local sid="$1" tstamp="$2"
+  local tmp
+  tmp="${LOG_FILE}.tmp$$"
+  awk -F'|' -v OFS='|' -v sid="$sid" -v ts="$tstamp" '
+    NR==1 { print; next }
+    $1==sid {
+      if (NF<7) { $7 = ts }
+      else if ($7=="" || $7=="\r") { $7 = ts }
+      else { $7 = $7 "," ts }
+    }
+    { print }
+  ' "$LOG_FILE" > "$tmp" && mv "$tmp" "$LOG_FILE"
+}
 
 # Generate random injection parameters and formatted star_id
 gen_random() {
@@ -97,6 +129,7 @@ print(f"STAR_ID={star_id}")
 PY
 }
 
+ensure_log
 username=$(whoami)
 declare -g -A RESCUE_SEEN=()
 declare -g -a SUBMITTED_STAR_IDS=()
@@ -111,7 +144,11 @@ check_and_resubmit_rescues() {
         base_dag="${resc%.rescue00?}"
         echo "Detected rescue file: $resc. Re-submitting $base_dag ..."
         # Do not fail the whole script if re-submit hiccups; retry next pass
-        condor_submit_dag "$base_dag" || echo "Warning: re-submit failed for $base_dag; will retry on next scan."
+        if condor_submit_dag "$base_dag"; then
+          log_resubmission "$sid" "$(date '+%Y-%m-%d %H:%M:%S')"
+        else
+          echo "Warning: re-submit failed for $base_dag; will retry on next scan."
+        fi
         RESCUE_SEEN[$resc]=1
       fi
     done
@@ -169,9 +206,12 @@ for (( i=1; i<=N_INJRECOVS; i++ )); do
   done
 
   echo "Submitting DAG: $dag_file"
-  condor_submit_dag "$dag_file"
-  # Track this STAR_ID so future rescue scans only consider our submissions
-  SUBMITTED_STAR_IDS+=("$STAR_ID")
+  if condor_submit_dag "$dag_file"; then
+    # Log first submission
+    log_new_submission "$STAR_ID" "${KV[P]}" "${KV[RP]}" "${KV[T]}" "${KV[E]}" "$(date '+%Y-%m-%d %H:%M:%S')"
+    # Track this STAR_ID so future rescue scans only consider our submissions
+    SUBMITTED_STAR_IDS+=("$STAR_ID")
+  fi
   sleep 2
   # Quick rescue scan after submitting this DAG
   check_and_resubmit_rescues
