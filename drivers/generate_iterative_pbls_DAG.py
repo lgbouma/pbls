@@ -1,19 +1,28 @@
 ##########################################
-# OPTIONS
-ntotchunks = 500
-star_id = 'kplr006184894' # kepler-1627
-star_id = 'kplr008653134' # kepler-1643
-star_id = 'kplr010736489' # kepler-1974 = koi 7368
-star_id = 'kplr006184894_inject-P6p941-R10p1-T2p6-E1p234' # kepler-1627 injection
-star_id = 'kplr008653134_inject-P4p898-R1p5-T2p6-E1p234' # kepler-1643 injection
-star_id = 'kplr008653134_inject-P4p898-R1p2-T2p6-E1p234' # kepler-1643 injection
-star_id = 'kplr008653134_inject-P7p898-R1p5-T2p6-E1p234' # kepler-1643 injection
-star_id = 'kplr008653134_inject-P7p898-R1p2-T2p6-E1p234' # kepler-1643 injection
-star_id = 'kplr008653134_inject-P7p898-R1p0-T2p6-E1p234' # kepler-1643 injection
-star_id = 'kplr008653134_inject-P4p898-R1p0-T2p6-E1p234' # kepler-1643 injection
-snrthreshold = 8
-maxiter = 3
+# CLI OPTIONS
+# Defaults per request:
+# - ntotchunks = 200
+# - star_id = None (must be provided by caller)
+# - snrthreshold = 8
+# - maxiter = 2
 ##########################################
+import argparse
+
+parser = argparse.ArgumentParser(description="Generate a DAG for iterative PBLS runs.")
+parser.add_argument("--ntotchunks", type=int, default=200, help="Total number of period chunks (default: 200)")
+parser.add_argument("--star_id", type=str, default=None, help="Star identifier, e.g., kplr008653134 or kplr008653134_inject-P4p898-R1p2-T2p6-E1p234")
+parser.add_argument("--snrthreshold", type=float, default=8, help="SNR threshold for masking (default: 8)")
+parser.add_argument("--maxiter", type=int, default=2, help="Maximum number of iterations (default: 2)")
+
+args = parser.parse_args()
+
+ntotchunks = int(args.ntotchunks)
+star_id = args.star_id
+snrthreshold = args.snrthreshold
+maxiter = int(args.maxiter)
+
+if star_id is None:
+    raise SystemExit("Error: --star_id must be provided.")
 
 dag_filename = f"run_iterative_pbls_{star_id}.dag"
 
