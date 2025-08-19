@@ -212,9 +212,53 @@ for (( i=1; i<=N_INJRECOVS; i++ )); do
     # Track this STAR_ID so future rescue scans only consider our submissions
     SUBMITTED_STAR_IDS+=("$STAR_ID")
   fi
-  sleep 2
+  sleep 10
   # Quick rescue scan after submitting this DAG
   check_and_resubmit_rescues
 done
 
 echo "All $N_INJRECOVS injection-recovery DAGs submitted for star $STAR_ID_BASE."
+
+# -----------------------------
+# Post-submit monitoring loop
+# -----------------------------
+
+# Determine completion based on presence of NTOTCHUNKS err files in iter1
+is_dag_complete() {
+  local sid="$1"
+  shopt -s nullglob
+  local errs=("logs/${sid}/iter1"/*.err)
+  shopt -u nullglob
+  local cnt=${#errs[@]}
+  if [[ "$cnt" -ge "$NTOTCHUNKS" ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+if [[ ${#SUBMITTED_STAR_IDS[@]} -gt 0 ]]; then
+  # Copy to a working list of pending completions
+  PENDING_STAR_IDS=("${SUBMITTED_STAR_IDS[@]}")
+  echo "Entering monitoring loop for ${#PENDING_STAR_IDS[@]} DAG(s) until completion..."
+  while [[ ${#PENDING_STAR_IDS[@]} -gt 0 ]]; do
+    # Resubmit any rescues that appeared
+    check_and_resubmit_rescues
+
+    # Recompute pending list by filtering out completed DAGs
+    NEW_PENDING=()
+    for sid in "${PENDING_STAR_IDS[@]}"; do
+      if is_dag_complete "$sid"; then
+        echo "DAG completed for $sid (>= $NTOTCHUNKS err files in logs/$sid/iter1)."
+      else
+        NEW_PENDING+=("$sid")
+      fi
+    done
+    PENDING_STAR_IDS=("${NEW_PENDING[@]}")
+
+    if [[ ${#PENDING_STAR_IDS[@]} -gt 0 ]]; then
+      sleep 120
+    fi
+  done
+  echo "All submitted DAGs have completed. Exiting monitor."
+fi
