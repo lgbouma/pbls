@@ -15,6 +15,10 @@
 
 set -euo pipefail
 
+# Timestamped logging helpers
+log() { echo "$(date -Is) $*"; }
+log_err() { echo "$(date -Is) $*" >&2; }
+
 STAR_ID_BASE=""
 N_INJRECOVS=20 # Number of injection recovery experiments to run for this star.
 NTOTCHUNKS=200 # Do not lower below 200 at risk of medium runtime cap.
@@ -23,7 +27,7 @@ MAXITER=2 # Number of PBLS iterations per experiment.
 LOG_FILE="injrecov_submissions.csv" # Pipe-delimited CSV log
 
 function usage() {
-  echo "Usage: $0 --star <kplr#########> [--n 50] [--ntotchunks 200] [--snr 8] [--maxiter 2]" >&2
+  log_err "Usage: $0 --star <kplr#########> [--n 50] [--ntotchunks 200] [--snr 8] [--maxiter 2]"
 }
 
 # Parse args
@@ -42,13 +46,13 @@ while [[ $# -gt 0 ]]; do
     -h|--help)
       usage; exit 0 ;;
     *)
-      echo "Unknown argument: $1" >&2
+      log_err "Unknown argument: $1"
       usage; exit 1 ;;
   esac
 done
 
 if [[ -z "$STAR_ID_BASE" ]]; then
-  echo "Error: --star is required (e.g., --star kplr008653134)." >&2
+  log_err "Error: --star is required (e.g., --star kplr008653134)."
   usage
   exit 1
 fi
@@ -142,12 +146,12 @@ check_and_resubmit_rescues() {
     for resc in run_iterative_pbls_"${sid}".dag.rescue00?; do
       if [[ -z "${RESCUE_SEEN[$resc]:-}" ]]; then
         base_dag="${resc%.rescue00?}"
-        echo "Detected rescue file: $resc. Re-submitting $base_dag ..."
+        log "Detected rescue file: $resc. Re-submitting $base_dag ..."
         # Do not fail the whole script if re-submit hiccups; retry next pass
         if condor_submit_dag "$base_dag"; then
           log_resubmission "$sid" "$(date '+%Y-%m-%d %H:%M:%S')"
         else
-          echo "Warning: re-submit failed for $base_dag; will retry on next scan."
+          log "Warning: re-submit failed for $base_dag; will retry on next scan."
         fi
         RESCUE_SEEN[$resc]=1
       fi
@@ -159,7 +163,7 @@ check_and_resubmit_rescues() {
 for (( i=1; i<=N_INJRECOVS; i++ )); do
   # Periodic rescue sweep before each new submission
   check_and_resubmit_rescues
-  echo "[injrecov $i/$N_INJRECOVS] Generating random properties..."
+  log "[injrecov $i/$N_INJRECOVS] Generating random properties..."
   mapfile -t lines < <(gen_random)
   # Export vars from Python output
   declare -A KV
@@ -171,14 +175,14 @@ for (( i=1; i<=N_INJRECOVS; i++ )); do
 
   STAR_ID="${KV[STAR_ID]}"
   if [[ -z "$STAR_ID" ]]; then
-    echo "Failed to construct STAR_ID; aborting." >&2
+    log_err "Failed to construct STAR_ID; aborting."
     exit 1
   fi
 
-  echo "Drawn: P=${KV[P]} d, Rp=${KV[RP]} Re, T=${KV[T]} hr, E=${KV[E]} d"
-  echo "STAR_ID: $STAR_ID"
+  log "Drawn: P=${KV[P]} d, Rp=${KV[RP]} Re, T=${KV[T]} hr, E=${KV[E]} d"
+  log "STAR_ID: $STAR_ID"
 
-  echo "Generating DAG for $STAR_ID ..."
+  log "Generating DAG for $STAR_ID ..."
   python3 generate_iterative_pbls_DAG.py \
     --ntotchunks "$NTOTCHUNKS" \
     --star_id "$STAR_ID" \
@@ -187,25 +191,25 @@ for (( i=1; i<=N_INJRECOVS; i++ )); do
 
   dag_file="run_iterative_pbls_${STAR_ID}.dag"
   if [[ ! -f "$dag_file" ]]; then
-    echo "Expected DAG not found: $dag_file" >&2
+    log_err "Expected DAG not found: $dag_file"
     exit 1
   fi
 
   # Check current job count and wait if at/above threshold
   job_count=$(condor_q | grep "Total for $username" | awk '{print $4}') || job_count=0
   if [[ -z "$job_count" ]]; then job_count=0; fi
-  echo "condor_q: Total for $username = $job_count jobs"
+  log "condor_q: Total for $username = $job_count jobs"
 
   while [[ "$job_count" -ge 8000 ]]; do
-    echo "Queue at capacity (>=8000). Sleeping 60s..."
+    log "Queue at capacity (>=8000). Sleeping 60s..."
     sleep 60
     # While waiting, keep an eye on any new rescue files and resubmit them
-    check_and_resubmit_rescues
+    check_and_resubmit_rescues || log "Rescue resubmit sweep hiccup; continuing"
     job_count=$(condor_q | grep "Total for $username" | awk '{print $4}') || job_count=0
     if [[ -z "$job_count" ]]; then job_count=0; fi
   done
 
-  echo "Submitting DAG: $dag_file"
+  log "Submitting DAG: $dag_file"
   if condor_submit_dag "$dag_file"; then
     # Log first submission
     log_new_submission "$STAR_ID" "${KV[P]}" "${KV[RP]}" "${KV[T]}" "${KV[E]}" "$(date '+%Y-%m-%d %H:%M:%S')"
@@ -214,10 +218,10 @@ for (( i=1; i<=N_INJRECOVS; i++ )); do
   fi
   sleep 10
   # Quick rescue scan after submitting this DAG
-  check_and_resubmit_rescues
+  check_and_resubmit_rescues || log "Rescue resubmit sweep hiccup; continuing"
 done
 
-echo "All $N_INJRECOVS injection-recovery DAGs submitted for star $STAR_ID_BASE."
+log "All $N_INJRECOVS injection-recovery DAGs submitted for star $STAR_ID_BASE."
 
 # -----------------------------
 # Post-submit monitoring loop
@@ -240,16 +244,21 @@ is_dag_complete() {
 if [[ ${#SUBMITTED_STAR_IDS[@]} -gt 0 ]]; then
   # Copy to a working list of pending completions
   PENDING_STAR_IDS=("${SUBMITTED_STAR_IDS[@]}")
-  echo "Entering monitoring loop for ${#PENDING_STAR_IDS[@]} DAG(s) until completion..."
+  log "Entering monitoring loop for ${#PENDING_STAR_IDS[@]} DAG(s) until completion..."
+
+  # Relax error handling in the monitoring loop to guard
+  # against transient failures in helper commands.
+  set +e
+  set +o pipefail
   while [[ ${#PENDING_STAR_IDS[@]} -gt 0 ]]; do
-    # Resubmit any rescues that appeared
-    check_and_resubmit_rescues
+    # Resubmit any rescues that appeared; do not exit on hiccups
+    check_and_resubmit_rescues || log "Rescue resubmit sweep hiccup; continuing"
 
     # Recompute pending list by filtering out completed DAGs
     NEW_PENDING=()
     for sid in "${PENDING_STAR_IDS[@]}"; do
       if is_dag_complete "$sid"; then
-        echo "DAG completed for $sid (>= $NTOTCHUNKS err files in logs/$sid/iter1)."
+        log "DAG completed for $sid (>= $NTOTCHUNKS err files in logs/$sid/iter1)."
       else
         NEW_PENDING+=("$sid")
       fi
@@ -260,5 +269,7 @@ if [[ ${#SUBMITTED_STAR_IDS[@]} -gt 0 ]]; then
       sleep 120
     fi
   done
-  echo "All submitted DAGs have completed. Exiting monitor."
+  # Restore strict error handling
+  set -euo pipefail
+  log "All submitted DAGs have completed. Exiting monitor."
 fi
