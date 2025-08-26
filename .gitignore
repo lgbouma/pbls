@@ -26,3 +26,4 @@ art/*
 drivers/*csv
 run_iterative_pbls_kplr*dag
 *.swp
+scripts/cepher_target_vetting/
