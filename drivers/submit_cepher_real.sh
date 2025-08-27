@@ -81,7 +81,9 @@ while IFS= read -r kic || [[ -n "$kic" ]]; do
     continue
   fi
 
-  STAR_ID="${kic}"
+  KIC_ID="${kic}"
+  STAR_ID=$(printf "kplr%09d" "$KIC_ID")
+
   log "[${lineno}] Preparing STAR_ID: $STAR_ID"
 
   log "Generating DAG for $STAR_ID ..."
@@ -114,8 +116,8 @@ while IFS= read -r kic || [[ -n "$kic" ]]; do
     log_new_submission "$STAR_ID" "$(date '+%Y-%m-%d %H:%M:%S')"
   fi
 
-  # Small delay between submissions to avoid stampedes
-  sleep 5
+  # # Small delay between submissions to avoid stampedes
+  sleep 10
 done < "$CSV_FILE"
 
 log "All DAGs submitted from CSV: $CSV_FILE"

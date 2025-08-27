@@ -20,7 +20,7 @@ log() { echo "$(date -Is) $*"; }
 log_err() { echo "$(date -Is) $*" >&2; }
 
 STAR_ID_BASE=""
-N_INJRECOVS=20 # Number of injection recovery experiments to run for this star.
+N_INJRECOVS=50 # Number of injection recovery experiments to run for this star.
 NTOTCHUNKS=200 # Do not lower below 200 at risk of medium runtime cap.
 SNRTHRESH=8
 MAXITER=2 # Number of PBLS iterations per experiment.
