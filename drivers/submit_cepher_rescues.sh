@@ -107,7 +107,7 @@ while true; do
   mapfile -t to_submit < <(latest_rescue_files || true)
   # Filter out those already logged
   filtered=()
-  for rf in "${to_submit[@]:-}"; do
+  for rf in "${to_submit[@]}"; do
     [[ -z "${rf:-}" ]] && continue
     sid=$(echo "$rf" | sed -E 's#^run_iterative_pbls_(kplr[0-9]{9})\.dag\.rescue[0-9]+$#\1#')
     base=$(basename "$rf")
@@ -117,7 +117,7 @@ while true; do
     filtered+=("$rf")
   done
 
-  if [[ ${#filtered[@]:-0} -eq 0 ]]; then
+  if [[ ${#filtered[@]} -eq 0 ]]; then
     if [[ "$submitted_any" == true ]]; then
       log "All rescue DAGs present have been submitted. Exiting."
     else
