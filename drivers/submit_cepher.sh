@@ -117,7 +117,7 @@ while IFS= read -r kic || [[ -n "$kic" ]]; do
   fi
 
   # # Small delay between submissions to avoid stampedes
-  sleep 10
+  sleep 120
 done < "$CSV_FILE"
 
 log "All DAGs submitted from CSV: $CSV_FILE"
